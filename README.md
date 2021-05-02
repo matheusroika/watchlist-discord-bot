@@ -1,0 +1,1 @@
+A discord bot to make a serverwide watchlist of series and movies.
