@@ -10,10 +10,10 @@ const genresCache = require("../services/genres-cache.json")
 const config = require("../config.json")
 const watchList = require("../watch-list.json")
 
-export default async function handleListenedMessage(message) {
+export default async function handleListenedMessage(message:Discord.Message) {
   const commandMessage = message
 
-  async function getMedia(title) {
+  async function getMedia(title:string) {
     const { data } = await api.get('search/multi', {
       params: {
         language: 'pt-BR',
@@ -26,17 +26,17 @@ export default async function handleListenedMessage(message) {
     return filteredMedia ? filteredMedia[0] : filteredMedia
   }
 
-  function filterMedia(media) {
-    return media.filter(currentMedia => (currentMedia.release_date || currentMedia.first_air_date) ? true : false)
+  function filterMedia(media:any) {
+    return media.filter((currentMedia:any) => (currentMedia.release_date || currentMedia.first_air_date) ? true : false)
   }
 
   if (message.embeds.length > 0 && (message.content.includes('letterboxd') || message.content.includes('themoviedb') || message.content.includes('imdb'))) {
     const searchTitle = (message.content.includes('letterboxd'))
-      ? message.embeds[0].title.replace(/ \(.*\)$/, '')
+      ? message.embeds[0].title?.replace(/ \(.*\)$/, '')
       : (message.content.includes('themoviedb'))
         ? message.embeds[0].title
-        :  message.embeds[0].title.replace(/ \(.*\) - IMDb$/, '')
-    const mediaItem = await getMedia(searchTitle)
+        :  message.embeds[0].title?.replace(/ \(.*\) - IMDb$/, '')
+    const mediaItem = await getMedia(searchTitle as string)
     const mediaEmbed = new Discord.MessageEmbed()
 
     if (!mediaItem) {
@@ -67,9 +67,9 @@ export default async function handleListenedMessage(message) {
       }
     }
     
-    const genreList = media.genre_ids.map(genre => {
+    const genreList = media.genre_ids.map((genreId:number) => {
       for (const genreType of genresCache.genres) {
-        if (genre == genreType.id) {
+        if (genreId == genreType.id) {
           return genreType.name
         }
       }
@@ -109,13 +109,13 @@ export default async function handleListenedMessage(message) {
             message.react('✅')
             message.react('❌')
 
-            const filter = (reaction, user) => ['✅', '❌'].includes(reaction.emoji.name) && user.id === commandMessage.author.id
+            const filter = (reaction:Discord.MessageReaction, user:Discord.User) => ['✅', '❌'].includes(reaction.emoji.name) && user.id === commandMessage.author.id
 
             message.awaitReactions(filter, { max: 1, time: 60000 })
               .then(collected => {
                 const reaction = collected.first()
 
-                if (reaction.emoji.name === '✅') {
+                if (reaction?.emoji.name === '✅') {
                   watchList.push(mediaObject)
                   fs.writeFileSync(path.resolve(__dirname, '../watch-list.json'), JSON.stringify(watchList, null, 2))
                   

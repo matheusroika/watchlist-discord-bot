@@ -14,7 +14,7 @@ const watchList = require("../watch-list.json")
 export = {
   name: 'add',
   description: 'Add new media to watch list',
-  async execute(message, args) {
+  async execute(message:Discord.Message, args:Array<string>) {
     if (args.length == 0) {
       message.channel.send(`Para adicionar uma obra a watch list, digite ${config.commandPrefix}add \`nome do filme\`.`)
       return
@@ -28,7 +28,7 @@ export = {
     let currentKnownForIndex = 0
     let currentQueryPage = 1
 
-    async function getMediaData(currentQueryPage) {
+    async function getMediaData(currentQueryPage:number) {
       const { data } = await api.get('search/multi', {
         params: {
           language: 'pt-BR',
@@ -40,7 +40,7 @@ export = {
       return data
     }
 
-    function sendEndEmbed(message) {
+    function sendEndEmbed(message:Discord.Message) {
       const endEmbed = new Discord.MessageEmbed()
         .setTitle('Fim da pesquisa')
         .setDescription('Você chegou no último item da pesquisa')
@@ -55,13 +55,13 @@ export = {
       message.react('🔁')
       message.react('❌')
         
-      const filter = (reaction, user) => ['🔁', '❌'].includes(reaction.emoji.name) && user.id === commandMessage.author.id
+      const filter = (reaction:Discord.MessageReaction, user:Discord.User) => ['🔁', '❌'].includes(reaction.emoji.name) && user.id === commandMessage.author.id
 
       message.awaitReactions(filter, { max: 1, time: 60000 })
         .then(async collected => {
           const reaction = collected.first()
 
-          if (reaction.emoji.name === '🔁') {
+          if (reaction?.emoji.name === '🔁') {
             if (currentQueryPage > 1) {
               currentQueryPage = 1
               mediaData = await getMediaData(currentQueryPage)
@@ -75,7 +75,7 @@ export = {
         })
     }
 
-    function sendCleanEmbed(cleanEmbed:Discord.MessageEmbed, message, title:string, description:string) {
+    function sendCleanEmbed(cleanEmbed:Discord.MessageEmbed, message:Discord.Message, title:string, description:string) {
       cleanEmbed.fields = []
       cleanEmbed
         .setTitle(title)
@@ -87,7 +87,7 @@ export = {
       message.reactions.removeAll()
     }
 
-    async function sendMediaEmbed(previousMessage?) {
+    async function sendMediaEmbed(previousMessage?:Discord.Message) {
       if (currentKnownForIndex > mediaData.results[currentMediaIndex]?.known_for?.length - 1 ) {
         ++currentMediaIndex
         currentKnownForIndex = 0
@@ -100,7 +100,7 @@ export = {
       }
       
       if ((currentQueryPage - 1) * maxInPage + currentMediaIndex > mediaData.total_results - 1) {
-        sendEndEmbed(previousMessage)
+        sendEndEmbed(previousMessage as Discord.Message)
         return
       }
 
@@ -142,13 +142,13 @@ export = {
       movieMessage.react('▶️')
       movieMessage.react('❌')
 
-      const filter = (reaction, user) => ['✅', '▶️', '❌'].includes(reaction.emoji.name) && user.id === commandMessage.author.id
+      const filter = (reaction: Discord.MessageReaction, user:Discord.User) => ['✅', '▶️', '❌'].includes(reaction.emoji.name) && user.id === commandMessage.author.id
 
       movieMessage.awaitReactions(filter, { max: 1, time: 60000 })
         .then(collected => {
           const reaction = collected.first()
           
-          if (reaction.emoji.name === '✅') {
+          if (reaction?.emoji.name === '✅') {
             for (const items of watchList) {
               if (items.name === mediaOriginalTitle) {
                 mediaEmbed.fields = []
@@ -164,9 +164,9 @@ export = {
               }
             }
             
-            const genreList = media.genre_ids.map(genre => {
+            const genreList = media.genre_ids.map((genreId:number) => {
               for (const genreType of genresCache.genres) {
-                if (genre == genreType.id) {
+                if (genreId == genreType.id) {
                   return genreType.name
                 }
               }
@@ -192,7 +192,7 @@ export = {
             mediaEmbed.setFooter('')
             movieMessage.edit(mediaEmbed)
             movieMessage.reactions.removeAll()
-          } else if (reaction.emoji.name === '▶️') {
+          } else if (reaction?.emoji.name === '▶️') {
             if (isPerson) {
               ++currentKnownForIndex
             } else {

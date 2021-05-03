@@ -1,8 +1,8 @@
-const express = require('express');
+import express from 'express'
 const app = express();
 const PORT = process.env.PORT || 3000
 
-app.get('/', (req, res) => res.send('Hello World!'));
+app.get('/', (req:express.Request, res:express.Response) => res.send('Hello World!'));
 
 app.listen(PORT, () => console.log(`Server is listening on port ${PORT}`))
 
@@ -30,7 +30,7 @@ for (const file of commandFiles) {
 
 client.on("messageUpdate", (oldMessage, newMessage) => {
   if (oldMessage.channel.id === config.channelToListen) {
-    handleListenedMessage(newMessage)
+    handleListenedMessage(newMessage as Discord.Message)
   }
 })
 
@@ -43,7 +43,7 @@ client.on("message", message => {
   
   const commandBody = message.content.slice(config.commandPrefix.length)
   const commandArgs = commandBody.split(' ')
-  const commandName = commandArgs.shift().toLowerCase()
+  const commandName = commandArgs.shift()?.toLowerCase()
 
   if (!commands.has(commandName)) return
 

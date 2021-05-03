@@ -1,7 +1,9 @@
+import Discord from 'discord.js'
+
 export = {
   name: 'ping',
   description: 'Ping!',
-  execute(message, args) {
+  execute(message:Discord.Message, args:Array<string>) {
     message.channel.send('Pong.')
   }
 }

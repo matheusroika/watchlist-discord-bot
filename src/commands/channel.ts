@@ -1,12 +1,13 @@
 import fs from 'fs'
 import path from 'path'
+import Discord from 'discord.js'
 
 const config = require("../config.json")
 
 export = {
   name: 'channel',
   description: 'Set channel for bot to listen to.',
-  execute(message, args) {
+  execute(message:Discord.Message, args:Array<string>) {
     if (args.length > 1) {
       message.channel.send('Apenas 1 canal pode ser monitorado por vez!')
       return

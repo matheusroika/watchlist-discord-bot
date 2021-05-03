@@ -6,21 +6,21 @@ const imagesCache = require('../services/images-cache.json')
 export = {
   name: 'random',
   description: 'Select a random movie from the watch list.',
-  execute(message, args) {
+  execute(message:Discord.Message, args:Array<string>) {
     const commandMessage = message
     const argsList = args.join(' ').split('+')
 
-    async function sendMovieEmbed(previousMessage?) {
-      function getRandomInt(min, max) {
+    async function sendMovieEmbed(previousMessage?:Discord.Message) {
+      function getRandomInt(min:number, max:number) {
         return Math.floor(Math.random() * (max - min)) + min;
       }
 
-      function normalizeString(string) {
+      function normalizeString(string:string) {
         return string.normalize('NFD').replace(/[\u0300-\u036f]/g, "").toLowerCase()
       }
 
       function getAvailableGenres() {
-        let availableGenres = []
+        let availableGenres:Array<string> = []
         for (const movie of watchList) {
           availableGenres = availableGenres.concat(movie.genres)
         }
@@ -33,14 +33,14 @@ export = {
       if (args.length) {
         const argsGenres = argsList.map(genre => normalizeString(genre))
         const availableGenres = getAvailableGenres().map(genre => normalizeString(genre))
-        const movieGenres = movie.genres.map(genre => normalizeString(genre))
+        const movieGenres = movie.genres.map((genre:string) => normalizeString(genre))
         
         if (!availableGenres.some(genre => argsGenres.includes(genre))) {
           message.channel.send('Gênero de filme não encontrado. Tente novamente.')
           return
         }
 
-        if (!movieGenres.some(genre => argsGenres.includes(genre))) {
+        if (!movieGenres.some((genre:string) => argsGenres.includes(genre))) {
           if (previousMessage) {
             sendMovieEmbed(previousMessage)
           } else {
@@ -76,13 +76,13 @@ export = {
         movieMessage.react('✅')
         movieMessage.react('🔁')
 
-        const filter = (reaction, user) => ['✅', '🔁'].includes(reaction.emoji.name) && user.id === commandMessage.author.id
+        const filter = (reaction:Discord.MessageReaction, user:Discord.User) => ['✅', '🔁'].includes(reaction.emoji.name) && user.id === commandMessage.author.id
 
         movieMessage.awaitReactions(filter, { max: 1, time: 60000 })
           .then(async collected => {
             const reaction = collected.first()
 
-            if (reaction.emoji.name === '✅') {
+            if (reaction?.emoji.name === '✅') {
               movieEmbed.fields = []
               movieMessage.edit(movieEmbed)
               movieMessage.reactions.removeAll()

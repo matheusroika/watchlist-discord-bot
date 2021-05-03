@@ -5,7 +5,7 @@ const watchList = require("../watch-list.json")
 export = {
   name: 'list',
   description: 'List all media on watch list!',
-  async execute(message, args) {
+  async execute(message:Discord.Message, args:Array<string>) {
     const commandMessage = message
     const maxInPage = 12
     let currentPage = 1
@@ -17,7 +17,7 @@ export = {
       .addField('** **', '** **')
       
      
-    function addFields(startingIndex, finishingIndex) {
+    function addFields(startingIndex:number, finishingIndex:number) {
       let addFieldCount = 0
       for (let i = startingIndex; i < finishingIndex; i++) {
         listEmbed.addField(watchList[i].original_title, (watchList[i].title === watchList[i].original_title) ? '** **' : `*${watchList[i].title}*`, true)
@@ -33,7 +33,7 @@ export = {
       }
     }
 
-    function sendEndEmbed(message) {
+    function sendEndEmbed(message:Discord.Message) {
       const endEmbed = new Discord.MessageEmbed()
         .setTitle('Fim da pesquisa')
         .setDescription('Você chegou no último item da pesquisa')
@@ -48,13 +48,13 @@ export = {
       message.react('🔁')
       message.react('❌')
         
-      const filter = (reaction, user) => ['🔁', '❌'].includes(reaction.emoji.name) && user.id === commandMessage.author.id
+      const filter = (reaction:Discord.MessageReaction, user:Discord.User) => ['🔁', '❌'].includes(reaction.emoji.name) && user.id === commandMessage.author.id
 
       message.awaitReactions(filter, { max: 1, time: 60000 })
         .then(async collected => {
           const reaction = collected.first()
 
-          if (reaction.emoji.name === '🔁') {
+          if (reaction?.emoji.name === '🔁') {
             currentPage = 1
             sendListEmbed(message)
           } else {
@@ -67,9 +67,9 @@ export = {
         })
     }
 
-    async function sendListEmbed(previousMessage?) {
+    async function sendListEmbed(previousMessage?:Discord.Message) {
       if ((currentPage - 1) * maxInPage > watchList.length) {
-        sendEndEmbed(previousMessage)
+        sendEndEmbed(previousMessage as Discord.Message)
         return
       }
 
@@ -91,18 +91,18 @@ export = {
       }
       listMessage.react('❌')
 
-      const filter = (reaction, user) => ['◀️', '▶️', '❌'].includes(reaction.emoji.name) && user.id === commandMessage.author.id
+      const filter = (reaction:Discord.MessageReaction, user:Discord.User) => ['◀️', '▶️', '❌'].includes(reaction.emoji.name) && user.id === commandMessage.author.id
 
       listMessage.awaitReactions(filter, { max: 1, time: 60000 })
         .then(collected => {
           const reaction = collected.first()
 
-          if (reaction.emoji.name === '◀️') {
+          if (reaction?.emoji.name === '◀️') {
             --currentPage
             listEmbed.fields = []
             listEmbed.addField('** **', '** **')
             sendListEmbed(listMessage)
-          } else if (reaction.emoji.name === '▶️') {
+          } else if (reaction?.emoji.name === '▶️') {
             ++currentPage
             listEmbed.fields = []
             listEmbed.addField('** **', '** **')
