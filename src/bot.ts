@@ -5,7 +5,7 @@ import Discord from 'discord.js'
 import imagesCache from './services/images-cache'
 import genresCache from './services/genres-cache'
 import handleListenedMessage from './utils/handleListenedMessage'
-const { prefix, ...config } = require("./config.json")
+const config = require("./config.json")
 
 const client = new Discord.Client()
 const commands = new Discord.Collection()
@@ -16,7 +16,7 @@ export async function setBotPresence() {
   client.user?.setPresence({
     status: 'online',
     activity: {
-      name: (channelToListen) ? `#${channelToListen.name} | ${prefix}help` : `${prefix}help`,
+      name: (channelToListen) ? `#${channelToListen.name} | ${config.prefix}help` : `${config.prefix}help`,
       type: "LISTENING",
     }
   })
@@ -44,9 +44,9 @@ client.on("message", message => {
   if (message.channel.id === config.channelToListen) {
     handleListenedMessage(message)
   }
-  if (!message.content.startsWith(prefix)) return
+  if (!message.content.startsWith(config.prefix)) return
   
-  const commandBody = message.content.slice(prefix.length)
+  const commandBody = message.content.slice(config.prefix.length)
   const commandArgs = commandBody.split(' ')
   const commandName = commandArgs.shift()?.toLowerCase()
 
@@ -59,7 +59,7 @@ client.on("message", message => {
     let reply = 'Esse comando requer argumentos!';
   
     if (command.usage) {
-      reply += `\nVocê deve usá-lo dessa maneira: \`${prefix}${command.name} ${command.usage}\``;
+      reply += `\nVocê deve usá-lo dessa maneira: \`${config.prefix}${command.name} ${command.usage}\``;
     }
   
     return message.channel.send(reply);
