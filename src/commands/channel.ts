@@ -3,7 +3,7 @@ import path from 'path'
 import Discord from 'discord.js'
 
 import { setBotPresence } from '../bot'
-const { prefix, ...config } = require("../config.json")
+const config = require("../config.json")
 
 export = {
   name: 'channel',
@@ -19,7 +19,7 @@ export = {
 
     if (args.length == 0) {
       if (!config.channelToListen) {
-        message.channel.send(`Para monitorar um canal, digite ${prefix}channel \`#canal\`.`)
+        message.channel.send(`Para monitorar um canal, digite ${config.prefix}channel \`#canal\`.`)
       } else {
         message.channel.send(`Parando de monitorar canal <#${config.channelToListen}>`)
         delete config.channelToListen
@@ -31,7 +31,7 @@ export = {
     }
 
     if (!/^<#.*>$/.test(args[0])) {
-      message.channel.send(`Você precisa marcar o canal que quer monitorar! (Exemplo: \`${prefix}channel #canal\`)`)
+      message.channel.send(`Você precisa marcar o canal que quer monitorar! (Exemplo: \`${config.prefix}channel #canal\`)`)
       return
     }
     
