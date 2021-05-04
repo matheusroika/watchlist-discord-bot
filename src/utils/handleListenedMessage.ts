@@ -6,8 +6,8 @@ import ptBR from 'date-fns/locale/pt-BR'
 
 import { api } from '../services/api'
 
-const genresCache = require("../services/genres-cache.json")
-const config = require("../config.json")
+const { genres } = require("../services/genres-cache.json")
+const { prefix } = require("../config.json")
 const watchList = require("../watch-list.json")
 
 export default async function handleListenedMessage(message:Discord.Message) {
@@ -41,7 +41,7 @@ export default async function handleListenedMessage(message:Discord.Message) {
 
     if (!mediaItem) {
       mediaEmbed
-          .setTitle('Erro')
+          .setTitle('Monitoramento de canal')
           .setDescription('Não encontramos nenhuma obra com base nesse link.')
       message.channel.send(mediaEmbed)
 
@@ -60,7 +60,7 @@ export default async function handleListenedMessage(message:Discord.Message) {
         const formattedDate = format(new Date(items.addedAt), "dd/MM/yyyy 'às' HH:mm", {locale: ptBR})
 
         mediaEmbed
-          .setTitle('Erro')
+          .setTitle('Monitoramento de canal')
           .setDescription(`${isMovie ? 'Esse filme' : 'Essa série'} já está na watch list do servidor.\nColocado por <@${items.addedBy.id}> em ${formattedDate}`)
         message.channel.send(mediaEmbed)
         return
@@ -68,7 +68,7 @@ export default async function handleListenedMessage(message:Discord.Message) {
     }
     
     const genreList = media.genre_ids.map((genreId:number) => {
-      for (const genreType of genresCache.genres) {
+      for (const genreType of genres) {
         if (genreId == genreType.id) {
           return genreType.name
         }
@@ -92,17 +92,20 @@ export default async function handleListenedMessage(message:Discord.Message) {
       fs.writeFileSync(path.resolve(__dirname, '../watch-list.json'), JSON.stringify(watchList, null, 2))
       
       mediaEmbed
-        .setTitle('Sucesso')
+        .setTitle('Monitoramento de canal')
         .setDescription(`${isMovie ? 'O filme' : 'A série'} ${message.embeds[0].title} foi adicionad${isMovie ? 'o' : 'a'} a watch list com sucesso.`)
       message.channel.send(mediaEmbed)
     } else {
       mediaEmbed
-        .setTitle('Aviso')
+        .setTitle('Monitoramento de canal')
         .setDescription(`Encontramos ${isMovie ? 'um filme' : 'uma série'} com o nome parecido, mas não exato`)
         .addFields(
+          {name: '** **', value: '** **'},
           {name: 'Nome buscado', value: searchTitle, inline: true},
-          {name: 'Nome encontrado', value: `${(mediaOriginalTitle === mediaTitle) ? mediaOriginalTitle : `${mediaOriginalTitle} *(${mediaTitle})*`}`, inline: true},
-          {name: '\u200B', value: `**Deseja adicionar ${isMovie ? 'o filme' : 'a série'} encontrad${isMovie ? 'o' : 'a'}?**`},
+          {name: 'Nome encontrado', value: `${(mediaTitle) ? (mediaOriginalTitle.toLowerCase() === mediaTitle.toLowerCase()) ? mediaOriginalTitle : `${mediaOriginalTitle} *(${mediaTitle})*` : mediaOriginalTitle}`, inline: true},
+          {name: '** **', value: `**Deseja adicionar ${isMovie ? 'o filme' : 'a série'} encontrad${isMovie ? 'o' : 'a'}?**`},
+          {name: '✅', value: 'Confirmar', inline: true},
+          {name: '❌', value: 'Cancelar', inline: true},
         )
       message.channel.send(mediaEmbed)
           .then(message => {
@@ -121,15 +124,15 @@ export default async function handleListenedMessage(message:Discord.Message) {
                   
                   mediaEmbed.fields = []
                   mediaEmbed
-                    .setTitle('Sucesso')
+                    .setTitle('Monitoramento de canal')
                     .setDescription(`O filme ${(searchTitle === mediaTitle) ? searchTitle : `${searchTitle} *(${mediaTitle})*`} foi adicionado a watch list com sucesso.`)
                   message.reactions.removeAll()
                   message.edit(mediaEmbed)
                 } else {
                   mediaEmbed.fields = []
                   mediaEmbed
-                    .setTitle('Erro')
-                    .setDescription(`Não adicionamos nenhuma obra na watch list. Tente procurar usando\n${config.commandPrefix}add \`nome da obra\``)
+                    .setTitle('Monitoramento de canal')
+                    .setDescription(`Não adicionamos nenhuma obra na watch list. Tente procurar usando\n\`${prefix}add nome da obra\``)
                   message.reactions.removeAll()
                   message.edit(mediaEmbed)
                 }

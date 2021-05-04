@@ -1,14 +1,24 @@
 import Discord from 'discord.js'
 
+const { prefix } = require('../config.json')
+const { images } = require('../services/images-cache.json')
 const watchList = require('../watch-list.json')
-const imagesCache = require('../services/images-cache.json')
 
 export = {
   name: 'random',
-  description: 'Select a random movie from the watch list.',
+  aliases: ['draw', 'aleatorio', 'sorteio'],
+  description: 'Sorteia uma obra aleatória da watch list. Se quiser, filtre usando gêneros divididos por +.',
+  usage: '[gênero]` ou\n`[gênero 1+gênero 2...]',
   execute(message:Discord.Message, args:Array<string>) {
     const commandMessage = message
     const argsList = args.join(' ').split('+')
+
+    if(!watchList.length) {
+      const errorEmbed = new Discord.MessageEmbed()
+        .setTitle('Sorteio')
+        .setDescription(`A watch list está vazia! Digite \`${prefix}add <nome da obra>\` para adicionar uma obra!`)
+      return message.channel.send(errorEmbed)
+    }
 
     async function sendMovieEmbed(previousMessage?:Discord.Message) {
       function getRandomInt(min:number, max:number) {
@@ -54,18 +64,19 @@ export = {
       const movieEmbed = new Discord.MessageEmbed()
         .setTitle(
           (movie.title)
-            ? (movie.title == movie.original_title)
+            ? (movie.title.toLowerCase() === movie.original_title.toLowerCase())
               ? movie.title
               : `${movie.title} *(${movie.original_title})*`
             : movie.original_title
         )
         .setURL(`https://www.themoviedb.org/${movie.media_type}/${movie.id}`)
         .setDescription(movie.description)
-        .setThumbnail(`${imagesCache.images.secure_base_url}/${imagesCache.images.poster_sizes[4]}/${movie.poster_path}`)
+        .setThumbnail(`${images.secure_base_url}/${images.poster_sizes[4]}/${movie.poster_path}`)
         .addFields(
-          {name: '\u200B', value: '\u200B'},
-          {name: '✅', value: 'Escolher esse', inline: true},
-          {name: '🔁', value: 'Outro', inline: true},
+          {name: '** **', value: '** **'},
+          {name: '✅', value: 'Confirmar', inline: true},
+          {name: '🔁', value: 'Sortear novamente', inline: true},
+          {name: '❌', value: 'Cancelar', inline: true},
         )
 
         const movieMessage = previousMessage ? previousMessage : await message.channel.send(movieEmbed)
@@ -75,8 +86,9 @@ export = {
         } 
         movieMessage.react('✅')
         movieMessage.react('🔁')
+        movieMessage.react('❌')
 
-        const filter = (reaction:Discord.MessageReaction, user:Discord.User) => ['✅', '🔁'].includes(reaction.emoji.name) && user.id === commandMessage.author.id
+        const filter = (reaction:Discord.MessageReaction, user:Discord.User) => ['✅', '❌', '🔁'].includes(reaction.emoji.name) && user.id === commandMessage.author.id
 
         movieMessage.awaitReactions(filter, { max: 1, time: 60000 })
           .then(async collected => {
@@ -84,9 +96,21 @@ export = {
 
             if (reaction?.emoji.name === '✅') {
               movieEmbed.fields = []
+              movieEmbed
+                .setDescription('')
+                .addField('Sorteio', 'Filme sorteado com sucesso')
               movieMessage.edit(movieEmbed)
               movieMessage.reactions.removeAll()
               return
+            } else if (reaction?.emoji.name === '❌') {
+              movieEmbed.fields = []
+              movieEmbed
+                .setTitle('Sorteio')
+                .setDescription('Sorteio de filmes cancelado')
+                .setURL('')
+                .setThumbnail('')
+              movieMessage.edit(movieEmbed)
+              movieMessage.reactions.removeAll()
             } else {
               sendMovieEmbed(movieMessage)
             }

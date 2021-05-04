@@ -1,13 +1,15 @@
 import Discord from "discord.js"
 
+const { prefix } = require("../config.json")
 const watchList = require("../watch-list.json")
 
 export = {
   name: 'list',
-  description: 'List all media on watch list!',
+  aliases: ['watchlist', 'lista'],
+  description: 'Lista todas as obras da watch list',
   async execute(message:Discord.Message, args:Array<string>) {
     const commandMessage = message
-    const maxInPage = 12
+    const maxInPage = 10
     let currentPage = 1
     const numberOfPages = Math.ceil(watchList.length/maxInPage)
 
@@ -15,17 +17,25 @@ export = {
       .setTitle('Watch list')
       .setDescription('Essas são as obras atualmente na watch list')
       .addField('** **', '** **')
+    
+    if(!watchList.length) {
+      listEmbed.fields = []
+      listEmbed.setDescription(`A watch list está vazia! Digite \`${prefix}add <nome da obra>\` para adicionar uma obra!`)
+      return message.channel.send(listEmbed)
+    }
       
      
     function addFields(startingIndex:number, finishingIndex:number) {
       let addFieldCount = 0
       for (let i = startingIndex; i < finishingIndex; i++) {
-        listEmbed.addField(watchList[i].original_title, (watchList[i].title === watchList[i].original_title) ? '** **' : `*${watchList[i].title}*`, true)
+        listEmbed.addField(watchList[i].original_title,
+          (watchList[i].title)
+            ? (watchList[i].title.toLowerCase() === watchList[i].original_title.toLowerCase())
+              ? '** **' : `*${watchList[i].title}*`
+            : '** **',
+          true)
+
         ++addFieldCount
-        
-        if (addFieldCount === 1) {
-          listEmbed.addField('\u200b', '\u200b', true)
-        }
         if (addFieldCount === 2 && i < finishingIndex - addFieldCount) {
           listEmbed.addField('** **', '** **')
           addFieldCount = 0
@@ -33,50 +43,24 @@ export = {
       }
     }
 
-    function sendEndEmbed(message:Discord.Message) {
-      const endEmbed = new Discord.MessageEmbed()
-        .setTitle('Fim da pesquisa')
-        .setDescription('Você chegou no último item da pesquisa')
-        .addFields(
-          {name: '\u200B', value: '\u200B'},
-          {name: '🔁', value: 'Repetir pesquisa', inline: true},
-          {name: '❌', value: 'Cancelar', inline: true},
-        )
-
-      message.reactions.removeAll()
-      message.edit(endEmbed)
-      message.react('🔁')
-      message.react('❌')
-        
-      const filter = (reaction:Discord.MessageReaction, user:Discord.User) => ['🔁', '❌'].includes(reaction.emoji.name) && user.id === commandMessage.author.id
-
-      message.awaitReactions(filter, { max: 1, time: 60000 })
-        .then(async collected => {
-          const reaction = collected.first()
-
-          if (reaction?.emoji.name === '🔁') {
-            currentPage = 1
-            sendListEmbed(message)
-          } else {
-            endEmbed.fields = []
-            endEmbed
-              .setTitle('Watch list')
-              .setDescription('A visualização da watch list foi encerrada.')
-            message.edit(endEmbed)
-          }
-        })
-    }
-
     async function sendListEmbed(previousMessage?:Discord.Message) {
-      if ((currentPage - 1) * maxInPage > watchList.length) {
-        sendEndEmbed(previousMessage as Discord.Message)
-        return
-      }
-
       const startingIndex = (currentPage - 1) * maxInPage
       const finishingIndex = (watchList.length - (maxInPage * (currentPage - 1)) > maxInPage) ? currentPage * maxInPage : watchList.length
-      
+
+      listEmbed.fields = []
+      listEmbed.addField('** **', '** **')
+
       addFields(startingIndex, finishingIndex)
+
+      listEmbed
+        .addFields(
+          {name: '** **', value: '** **'},
+          {name: '◀️', value: 'Página\nanterior', inline: true},
+          {name: '▶️', value: 'Próxima\npágina', inline: true},
+          {name: '❌', value: 'Cancelar', inline: true},
+          {name: '** **', value: '** **'},
+        )
+        .setFooter(`Página ${currentPage}/${numberOfPages}`)
 
       const listMessage = previousMessage ? previousMessage : await message.channel.send(listEmbed)
       if (previousMessage) {
@@ -86,7 +70,8 @@ export = {
 
       if (numberOfPages > 1 && currentPage > 1) {
         listMessage.react('◀️')
-      } else if (numberOfPages > 1) {
+      } 
+      if (numberOfPages > 1 && currentPage < numberOfPages) {
         listMessage.react('▶️')
       }
       listMessage.react('❌')
@@ -98,18 +83,16 @@ export = {
           const reaction = collected.first()
 
           if (reaction?.emoji.name === '◀️') {
-            --currentPage
-            listEmbed.fields = []
-            listEmbed.addField('** **', '** **')
+            if (numberOfPages > 1 && currentPage > 1) --currentPage
             sendListEmbed(listMessage)
           } else if (reaction?.emoji.name === '▶️') {
-            ++currentPage
-            listEmbed.fields = []
-            listEmbed.addField('** **', '** **')
+            if (numberOfPages > 1 && currentPage < numberOfPages) ++currentPage
             sendListEmbed(listMessage)
           } else {
             listEmbed.fields = []
-            listEmbed.setDescription('A visualização da watch list foi encerrada.')
+            listEmbed
+              .setDescription('A visualização da watch list foi encerrada.')
+              .setFooter('')
             listMessage.reactions.removeAll()
             listMessage.edit(listEmbed)
           }
@@ -117,7 +100,9 @@ export = {
         .catch(error => {
           console.error(error)
           listEmbed.fields = []
-          listEmbed.setDescription('A visualização da watch list foi encerrada.')
+          listEmbed
+            .setDescription('A visualização da watch list foi encerrada.')
+            .setFooter('')
           listMessage.reactions.removeAll()
           listMessage.edit(listEmbed)
         })
