@@ -2,6 +2,7 @@ import fs from 'fs'
 import path from 'path'
 import Discord from 'discord.js'
 
+import { setBotPresence } from '../bot'
 const config = require("../config.json")
 
 export = {
@@ -23,6 +24,7 @@ export = {
     }
     fs.writeFileSync(path.resolve(__dirname, '../config.json'), JSON.stringify(config, null, 2))
     message.channel.send(`Prefixo alterado para ${args[0]}`)
+    setBotPresence()
   }
   
 }
