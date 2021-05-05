@@ -24,7 +24,9 @@ export async function setBotPresence() {
 
 client.once('ready', async () => {
 	console.log('Bot is ready!')
-  setBotPresence()
+  await setBotPresence()
+
+  setInterval(async () => await setBotPresence(), 1000 * 60 * 30)
 })
 
 const commandFiles = fs.readdirSync(path.resolve(__dirname, './commands')).filter(file => file.endsWith('.ts'))
