@@ -6,6 +6,8 @@ import handleListenedMessage from './utils/handleListenedMessage'
 import Server from './model/Server'
 import db from './services/db'
 
+db.connect()
+
 const client = new Discord.Client()
 const commands = new Discord.Collection()
 
@@ -25,7 +27,6 @@ export async function setNewChannel(channel:string) {
 }
 
 client.once('ready', async () => {
-  await db.connect()
 	console.log('Bot is ready!')
 })
 
