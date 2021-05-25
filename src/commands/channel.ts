@@ -1,17 +1,17 @@
-import fs from 'fs'
-import path from 'path'
 import Discord from 'discord.js'
 
-import { setBotPresence } from '../bot'
-const config = require("../config.json")
+import Server from '../model/Server'
+
+import { setNewChannel } from '../bot'
 
 export = {
   name: 'channel',
   aliases: ['setchannel', 'canal'],
   description: 'Define o canal que será monitorado. Embeds URL nesse canal serão adicionados a watch list',
-  args: true,
   usage: '<#canal>',
-  execute(message:Discord.Message, args:Array<string>) {
+  async execute(message:Discord.Message, args:Array<string>) {
+    const config = await Server.findOne({serverId: message.guild?.id}, 'prefix channelToListen')
+
     if (args.length > 1) {
       message.channel.send('Apenas 1 canal pode ser monitorado por vez!')
       return
@@ -19,12 +19,11 @@ export = {
 
     if (args.length == 0) {
       if (!config.channelToListen) {
-        message.channel.send(`Para monitorar um canal, digite ${config.prefix}channel \`#canal\`.`)
+        message.channel.send(`Para monitorar um canal, digite \`${config.prefix}channel <#canal>\``)
       } else {
         message.channel.send(`Parando de monitorar canal <#${config.channelToListen}>`)
-        delete config.channelToListen
-        fs.writeFileSync(path.resolve(__dirname, '../config.json'), JSON.stringify(config, null, 2))
-        setBotPresence()
+        config.channelToListen = null
+        await config.save()
       }
       
       return
@@ -37,8 +36,8 @@ export = {
     
     const normalizedChannel = args[0].replace(/^<#|>$/g, '')
     config.channelToListen = normalizedChannel
-    fs.writeFileSync(path.resolve(__dirname, '../config.json'), JSON.stringify(config, null, 2))
+    await config.save()
+    setNewChannel(config.channelToListen)
     message.channel.send(`Monitorando canal ${args[0]}`)
-    setBotPresence()
   }
 }

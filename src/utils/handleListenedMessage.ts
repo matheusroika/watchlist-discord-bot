@@ -1,16 +1,16 @@
-import fs from 'fs'
-import path from 'path'
 import Discord from 'discord.js'
 import { format } from 'date-fns'
 import ptBR from 'date-fns/locale/pt-BR'
 
 import { api } from '../services/api'
+import { Config } from '../bot'
+import Server from '../model/Server'
 
-const { genres } = require("../services/genres-cache.json")
-const { prefix } = require("../config.json")
-const watchList = require("../watch-list.json")
+const { genres } = require("../../cache/genresCache.json")
 
-export default async function handleListenedMessage(message:Discord.Message) {
+export default async function handleListenedMessage(message:Discord.Message, { prefix }:Config) {
+  const server = await Server.findOne({serverId: message.guild?.id}, 'watchlist')
+  const { watchlist } = server
   const commandMessage = message
 
   async function getMedia(title:string) {
@@ -55,7 +55,7 @@ export default async function handleListenedMessage(message:Discord.Message) {
     const mediaOriginalTitle = isMovie ? media.original_title : media.original_name
     const mediaTitle = isMovie ? media.title : media.name
     
-    for (const items of watchList) {
+    for (const items of watchlist) {
       if (items.original_title === mediaOriginalTitle) {
         const formattedDate = format(new Date(items.addedAt), "dd/MM/yyyy 'às' HH:mm", {locale: ptBR})
 
@@ -88,8 +88,8 @@ export default async function handleListenedMessage(message:Discord.Message) {
     }
 
     if (searchTitle === mediaOriginalTitle) {
-      watchList.push(mediaObject)
-      fs.writeFileSync(path.resolve(__dirname, '../watch-list.json'), JSON.stringify(watchList, null, 2))
+      server.watchlist.push(mediaObject)
+      await server.save() 
       
       mediaEmbed
         .setTitle('Monitoramento de canal')
@@ -115,12 +115,12 @@ export default async function handleListenedMessage(message:Discord.Message) {
             const filter = (reaction:Discord.MessageReaction, user:Discord.User) => ['✅', '❌'].includes(reaction.emoji.name) && user.id === commandMessage.author.id
 
             message.awaitReactions(filter, { max: 1, time: 60000 })
-              .then(collected => {
+              .then(async collected => {
                 const reaction = collected.first()
 
                 if (reaction?.emoji.name === '✅') {
-                  watchList.push(mediaObject)
-                  fs.writeFileSync(path.resolve(__dirname, '../watch-list.json'), JSON.stringify(watchList, null, 2))
+                  server.watchlist.push(mediaObject)
+                  await server.save()
                   
                   mediaEmbed.fields = []
                   mediaEmbed

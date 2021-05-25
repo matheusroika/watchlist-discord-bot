@@ -1,24 +1,26 @@
 import Discord from "discord.js"
 
-const { prefix } = require("../config.json")
-const watchList = require("../watch-list.json")
+import Server from "../model/Server"
+
+import { Config } from "../bot"
 
 export = {
   name: 'list',
   aliases: ['watchlist', 'lista'],
   description: 'Lista todas as obras da watch list',
-  async execute(message:Discord.Message, args:Array<string>) {
+  async execute(message:Discord.Message, args:Array<string>, { prefix }:Config) {
+    const { watchlist } = await Server.findOne({serverId: message.guild?.id}, 'watchlist')
     const commandMessage = message
     const maxInPage = 10
     let currentPage = 1
-    const numberOfPages = Math.ceil(watchList.length/maxInPage)
+    const numberOfPages = Math.ceil(watchlist.length/maxInPage)
 
     const listEmbed = new Discord.MessageEmbed()
       .setTitle('Watch list')
       .setDescription('Essas são as obras atualmente na watch list')
       .addField('** **', '** **')
     
-    if(!watchList.length) {
+    if(!watchlist.length) {
       listEmbed.fields = []
       listEmbed.setDescription(`A watch list está vazia! Digite \`${prefix}add <nome da obra>\` para adicionar uma obra!`)
       return message.channel.send(listEmbed)
@@ -28,10 +30,10 @@ export = {
     function addFields(startingIndex:number, finishingIndex:number) {
       let addFieldCount = 0
       for (let i = startingIndex; i < finishingIndex; i++) {
-        listEmbed.addField(watchList[i].original_title,
-          (watchList[i].title)
-            ? (watchList[i].title.toLowerCase() === watchList[i].original_title.toLowerCase())
-              ? '** **' : `*${watchList[i].title}*`
+        listEmbed.addField(watchlist[i].original_title,
+          (watchlist[i].title)
+            ? (watchlist[i].title.toLowerCase() === watchlist[i].original_title.toLowerCase())
+              ? '** **' : `*${watchlist[i].title}*`
             : '** **',
           true)
 
@@ -45,7 +47,7 @@ export = {
 
     async function sendListEmbed(previousMessage?:Discord.Message) {
       const startingIndex = (currentPage - 1) * maxInPage
-      const finishingIndex = (watchList.length - (maxInPage * (currentPage - 1)) > maxInPage) ? currentPage * maxInPage : watchList.length
+      const finishingIndex = (watchlist.length - (maxInPage * (currentPage - 1)) > maxInPage) ? currentPage * maxInPage : watchlist.length
 
       listEmbed.fields = []
       listEmbed.addField('** **', '** **')

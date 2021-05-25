@@ -1,10 +1,9 @@
-import fs from 'fs'
-import path from 'path'
 import Discord from 'discord.js'
 
-const { prefix } = require("../config.json")
-const { images } = require("../services/images-cache.json")
-const watchList = require("../watch-list.json")
+import Server from '../model/Server'
+
+import { Config } from '../bot'
+const { images } = require("../../cache/imagesCache.json")
 
 export = {
   name: 'remove',
@@ -12,14 +11,16 @@ export = {
   description: 'Remove uma obra da watch list',
   args: true,
   usage: '<nome da obra>',
-  async execute(message:Discord.Message, args:Array<string>) {
+  async execute(message:Discord.Message, args:Array<string>, { prefix }:Config) {
+    const server = await Server.findOne({serverId: message.guild?.id}, 'watchlist')
+    const { watchlist } = server
     const commandMessage = message
     const titleToRemove = normalizeString(args.join(" "))
     let removeIndex = 0
     const removeList:any = []
     const removeEmbed = new Discord.MessageEmbed()
 
-    if(!watchList.length) {
+    if(!watchlist.length) {
       removeEmbed
         .setTitle('Remoção de obras da watch list')
         .setDescription(`A watch list está vazia! Digite \`${prefix}add <nome da obra>\` para adicionar uma obra!`)
@@ -30,7 +31,7 @@ export = {
       return string.normalize('NFD').replace(/[\u0300-\u036f]/g, "").toLowerCase()
     }
 
-    for (const media of watchList) {
+    for (const media of watchlist) {
       const normalizedTitle = normalizeString(media.title)
       const normalizedOriginalTitle = normalizeString(media.original_title)
 
@@ -87,7 +88,7 @@ export = {
       const filter = (reaction:Discord.MessageReaction, user:Discord.User) => ['◀️', '▶️', '❌', '✅'].includes(reaction.emoji.name) && user.id === commandMessage.author.id
 
       removeMessage.awaitReactions(filter, { max: 1, time: 60000 })
-        .then(collected => {
+        .then(async collected => {
           const reaction = collected.first()
 
           if (reaction?.emoji.name === '◀️') {
@@ -102,8 +103,8 @@ export = {
               .setDescription('')
               .setFooter('')
               .addField('Resultado', 'Obra removida com sucesso')
-            const newWatchList = watchList.filter((media:any) => media !== removeMedia)
-            fs.writeFileSync(path.resolve(__dirname, '../watch-list.json'), JSON.stringify(newWatchList, null, 2))
+            server.watchlist = watchlist.filter((media:any) => media !== removeMedia)
+            await server.save()
 
             removeMessage.reactions.removeAll()
             removeMessage.edit(removeEmbed)

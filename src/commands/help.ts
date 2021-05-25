@@ -1,13 +1,13 @@
 import Discord from 'discord.js'
 
-const { prefix } = require("../config.json")
+import { Config } from '../bot'
 
 export = {
   name: 'help',
   aliases: ['commands', 'ajuda', 'comandos'],
   description: 'Lista todos os comandos ou mostra informações sobre um comando.',
   usage: '[nome do comando]',
-  execute(message:Discord.Message, args:Array<string>, commands:any) {
+  async execute(message:Discord.Message, args:Array<string>, commands:any, { prefix }:Config) {
     if (!args.length) {
       const commandMessage = message
       const maxInPage = 4

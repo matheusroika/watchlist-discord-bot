@@ -1,19 +1,21 @@
 import Discord from 'discord.js'
 
-const { prefix } = require('../config.json')
-const { images } = require('../services/images-cache.json')
-const watchList = require('../watch-list.json')
+import Server from '../model/Server'
+
+import { Config } from '../bot'
+const { images } = require("../../cache/imagesCache.json")
 
 export = {
   name: 'random',
   aliases: ['draw', 'aleatorio', 'sorteio'],
   description: 'Sorteia uma obra aleatória da watch list. Se quiser, filtre usando gêneros divididos por +.',
   usage: '[gênero]` ou\n`[gênero 1+gênero 2...]',
-  execute(message:Discord.Message, args:Array<string>) {
+  async execute(message:Discord.Message, args:Array<string>, { prefix }:Config) {
+    const { watchlist } = await Server.findOne({serverId: message.guild?.id}, 'watchlist')
     const commandMessage = message
     const argsList = args.join(' ').split('+')
 
-    if(!watchList.length) {
+    if(!watchlist.length) {
       const errorEmbed = new Discord.MessageEmbed()
         .setTitle('Sorteio')
         .setDescription(`A watch list está vazia! Digite \`${prefix}add <nome da obra>\` para adicionar uma obra!`)
@@ -31,14 +33,14 @@ export = {
 
       function getAvailableGenres() {
         let availableGenres:Array<string> = []
-        for (const movie of watchList) {
+        for (const movie of watchlist) {
           availableGenres = availableGenres.concat(movie.genres)
         }
         return availableGenres
       }
 
-      const randomIndex = getRandomInt(0, watchList.length)
-      const movie = watchList[randomIndex]
+      const randomIndex = getRandomInt(0, watchlist.length)
+      const movie = watchlist[randomIndex]
 
       if (args.length) {
         const argsGenres = argsList.map(genre => normalizeString(genre))

@@ -1,9 +1,8 @@
-import fs from 'fs'
-import path from 'path'
 import Discord from 'discord.js'
 
-import { setBotPresence } from '../bot'
-const config = require("../config.json")
+import Server from '../model/Server'
+
+import { setNewPrefix } from '../bot'
 
 export = {
   name: 'prefix',
@@ -11,7 +10,9 @@ export = {
   description: 'Altera o prefixo dos comandos do bot',
   args: true,
   usage: '<prefixo>',
-  execute(message:Discord.Message, args:Array<string>) {
+  async execute(message:Discord.Message, args:Array<string>) {
+    const config = await Server.findOne({serverId: message.guild?.id}, 'prefix channelToListen')
+
     if (args.length > 1) {
       message.channel.send('Apenas 1 prefixo é permitido!')
       return
@@ -22,9 +23,9 @@ export = {
     } else {
       config.prefix = args[0]
     }
-    fs.writeFileSync(path.resolve(__dirname, '../config.json'), JSON.stringify(config, null, 2))
-    message.channel.send(`Prefixo alterado para ${args[0]}`)
-    setBotPresence()
+    await config.save()
+    setNewPrefix(config.prefix)
+    message.channel.send(`Prefixo alterado para \`${args[0]}\``)
   }
   
 }

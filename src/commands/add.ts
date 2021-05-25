@@ -1,14 +1,12 @@
-import fs from 'fs'
-import path from 'path'
 import { format } from 'date-fns'
 import ptBR from 'date-fns/locale/pt-BR'
 import Discord from 'discord.js'
+import Server from '../model/Server'
 
 import { api } from '../services/api'
 
-const { images } = require("../services/images-cache.json")
-const genresCache = require("../services/genres-cache.json")
-const watchList = require("../watch-list.json")
+const { images } = require("../../cache/imagesCache.json")
+const genresCache = require("../../cache/genresCache.json")
 
 export = {
   name: 'add',
@@ -17,6 +15,7 @@ export = {
   args: true,
   usage: '<nome da obra>',
   async execute(message:Discord.Message, args:Array<string>) {
+    const server = await Server.findOne({serverId: message.guild?.id})
     const searchTitle = args.join(" ")
     const commandMessage = message
 
@@ -110,11 +109,11 @@ export = {
       const filter = (reaction: Discord.MessageReaction, user:Discord.User) => ['◀️', '▶️', '✅', '❌'].includes(reaction.emoji.name) && user.id === commandMessage.author.id
 
       movieMessage.awaitReactions(filter, { max: 1, time: 60000 })
-        .then(collected => {
+        .then(async collected => {
           const reaction = collected.first()
           
           if (reaction?.emoji.name === '✅') {
-            for (const items of watchList) {
+            for (const items of server.watchlist) {
               if (items.original_title === mediaOriginalTitle) {
                 mediaEmbed.fields = []
                 const formattedDate = format(new Date(items.addedAt), "dd/MM/yyyy 'às' HH:mm", {locale: ptBR})
@@ -137,6 +136,15 @@ export = {
               }
             })
 
+            const addedBy = {
+              id: commandMessage.author.id,
+              username: commandMessage.author.username,
+              bot: commandMessage.author.bot,
+              createdTimestamp: commandMessage.author.createdTimestamp,
+              tag: commandMessage.author.tag,
+              displayAvatarURL: commandMessage.author.displayAvatarURL()
+            }
+
             const mediaObject = {
               id: media.id,
               title: mediaTitle,
@@ -146,11 +154,11 @@ export = {
               description: media.overview,
               poster_path: media.poster_path,
               addedAt: Date.now(),
-              addedBy: commandMessage.author,
+              addedBy,
             }
 
-            watchList.push(mediaObject)
-            fs.writeFileSync(path.resolve(__dirname, '../watch-list.json'), JSON.stringify(watchList, null, 2))
+            server.watchlist.push(mediaObject)
+            await server.save()            
 
             mediaEmbed.fields = []
             mediaEmbed.addField('Adicionar na watch list', 'Obra adicionada com sucesso')

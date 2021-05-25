@@ -9,9 +9,12 @@
   "license": "MIT",
   "dependencies": {
     "@types/node": "^15.0.1",
+    "@types/node-cron": "^2.0.3",
     "axios": "^0.21.1",
     "date-fns": "^2.21.1",
     "discord.js": "^12.5.3",
+    "mongoose": "^5.12.11",
+    "node-cron": "^3.0.0",
     "ts-node": "^9.1.1"
   },
   "devDependencies": {

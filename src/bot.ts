@@ -2,31 +2,31 @@ import fs from 'fs'
 import path from 'path'
 import Discord from 'discord.js'
 
-import imagesCache from './services/images-cache'
-import genresCache from './services/genres-cache'
 import handleListenedMessage from './utils/handleListenedMessage'
-const config = require("./config.json")
+import Server from './model/Server'
+import db from './services/db'
 
 const client = new Discord.Client()
 const commands = new Discord.Collection()
 
-export async function setBotPresence() {
-  const channelToListen:any = (config.channelToListen) ? await client.channels.fetch(config.channelToListen) : undefined
+export interface Config {
+  prefix: string;
+  channelToListen: string | null;
+}
 
-  client.user?.setPresence({
-    status: 'online',
-    activity: {
-      name: (channelToListen) ? `#${channelToListen.name} | ${config.prefix}help` : `${config.prefix}help`,
-      type: "LISTENING",
-    }
-  })
+let config: Config
+
+export async function setNewPrefix(prefix:string) {
+  config.prefix = prefix
+}
+
+export async function setNewChannel(channel:string) {
+  config.channelToListen = channel
 }
 
 client.once('ready', async () => {
+  await db.connect()
 	console.log('Bot is ready!')
-  await setBotPresence()
-
-  setInterval(async () => await setBotPresence(), 1000 * 60 * 30)
 })
 
 const commandFiles = fs.readdirSync(path.resolve(__dirname, './commands')).filter(file => file.endsWith('.ts'))
@@ -35,16 +35,35 @@ for (const file of commandFiles) {
   commands.set(command.name, command)
 }
 
-client.on("messageUpdate", (oldMessage, newMessage) => {
+client.on("guildCreate", async guild => {
+  const serverCheck = await Server.findOne({serverId: guild.id})
+  if (serverCheck) return
+
+  const server = {
+    serverId: guild.id,
+    prefix: ".",
+  }
+
+  const newServer = new Server(server)
+  await newServer.save()
+})
+
+client.on("messageUpdate", async (oldMessage, newMessage) => {
+  if (!config) {
+    config = await Server.findOne({serverId: oldMessage.guild?.id}, 'prefix channelToListen')
+  }
   if (oldMessage.channel.id === config.channelToListen) {
-    handleListenedMessage(newMessage as Discord.Message)
+    handleListenedMessage(newMessage as Discord.Message, config)
   }
 })
 
-client.on("message", message => {
+client.on("message", async message => {
+  if (!config) {
+    config = await Server.findOne({serverId: message.guild?.id}, 'prefix channelToListen')
+  }
   if (message.author.bot) return
   if (message.channel.id === config.channelToListen) {
-    handleListenedMessage(message)
+    handleListenedMessage(message, config)
   }
   if (!message.content.startsWith(config.prefix)) return
   
@@ -69,20 +88,13 @@ client.on("message", message => {
 
   try {
     if (command.name === 'help') {
-      command.execute(message, commandArgs, commands)
+      command.execute(message, commandArgs, commands, config)
       return
     }
-    command.execute(message, commandArgs)
+    command.execute(message, commandArgs, config)
   } catch (error) {
     console.error(error)
   }
 })
-
-async function getCache() {
-  await imagesCache()
-  await genresCache()
-}
-
-//getCache()
 
 client.login(process.env.BOT_TOKEN)
