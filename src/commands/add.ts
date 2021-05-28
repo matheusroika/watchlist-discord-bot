@@ -24,10 +24,10 @@ export = {
     let currentKnownForIndex = 0
     let currentQueryPage = 1
 
-    async function getMediaData(currentQueryPage:number) {
+    async function getMediaData(currentQueryPage:number, language:'pt-BR' | 'en-US'='pt-BR') {
       const { data } = await api.get('search/multi', {
         params: {
-          language: 'pt-BR',
+          language,
           query: searchTitle,
           page: currentQueryPage,
         }
@@ -61,8 +61,17 @@ export = {
       }
 
       const isPerson = (mediaData.results[currentMediaIndex].media_type == 'person')
-      const media = isPerson ? mediaData.results[currentMediaIndex].known_for[currentKnownForIndex] : mediaData.results[currentMediaIndex]
-     
+      const media = isPerson
+        ? mediaData.results[currentMediaIndex].known_for[currentKnownForIndex]
+        : mediaData.results[currentMediaIndex]
+      
+      if (!!!media.overview) {
+        const mediaDataInEnglish = await getMediaData(currentQueryPage, 'en-US')
+        media.overview = isPerson
+          ? mediaDataInEnglish.results[currentMediaIndex].known_for[currentKnownForIndex].overview
+          : mediaDataInEnglish.results[currentMediaIndex].overview
+      }
+
       const mediaType = media.media_type
       const isMovie = (mediaType == 'movie')
 

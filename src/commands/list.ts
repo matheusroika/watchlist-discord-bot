@@ -30,11 +30,12 @@ export = {
     function addFields(startingIndex:number, finishingIndex:number) {
       let addFieldCount = 0
       for (let i = startingIndex; i < finishingIndex; i++) {
-        listEmbed.addField(watchlist[i].original_title,
+        listEmbed.addField(watchlist[i].media_type === 'movie' ? 'Filme' : 'Série',
           (watchlist[i].title)
             ? (watchlist[i].title.toLowerCase() === watchlist[i].original_title.toLowerCase())
-              ? '** **' : `*${watchlist[i].title}*`
-            : '** **',
+              ? '** **'
+              : `**[${watchlist[i].original_title}](https://www.themoviedb.org/${watchlist[i].media_type}/${watchlist[i].id})** | *${watchlist[i].title}*`
+            : `**[${watchlist[i].original_title}](https://www.themoviedb.org/${watchlist[i].media_type}/${watchlist[i].id})**`,
           true)
 
         ++addFieldCount
