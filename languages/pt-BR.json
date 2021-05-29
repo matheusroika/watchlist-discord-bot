@@ -1,0 +1,117 @@
+{
+  "common": {
+    "add": "Adicionar",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "formatOfDate": "dd/MM/yyyy 'às' HH:mm",
+    "movie": "Filme",
+    "tv": "Série",
+    "previousMedia": "Obra anterior",
+    "nextMedia": "Próxima obra",
+    "previousPage": "Página\nanterior",
+    "nextPage": "Próxima\npágina"
+  },
+  "bot": {
+    "commandArgs": "Esse comando requer argumentos!",
+    "commandArgsUsage": "\nVocê deve usá-lo dessa maneira: `{{{configPrefix}}}{{{commandName}}} {{{commandUsage}}}`"
+  },
+  "addCommand": {
+    "name": "adicionar",
+    "aliases": ["novo", "add", "new"],
+    "description": "Adiciona nova obra na watchlist",
+    "usage": "<nome da obra>",
+    "title": "Adicionar na watchlist",
+    "footer": {
+      "value": "Página {{{currentQueryPage}}}/{{{mediaDataTotalPages}}} | Resultado {{{currentMediaIndex}}}/{{{mediaDataResultsLength}}}",
+      "isPerson": " | Obras famosas de {{{mediaDataName}}} {{{currentKnownForIndex}}}/{{{mediaDataLength}}}"
+    },
+    "alreadyInWatchlist": {
+      "isMovieTrue": "Esse filme",
+      "isMovieFalse": "Essa série",
+      "value": " já está na watchlist do servidor.\nColocado por <@{{{itemsAddedBy}}}> em {{{formattedDate}}}"
+    },
+    "success": "Obra adicionada com sucesso",
+    "cancelled": "Nenhuma obra adicionada a watchlist."
+  },
+  "listenedMessage": {
+    "title": "Monitoramento de canal",
+    "foundSimilar": {
+      "description": "Encontramos uma obra com o nome parecido, mas não exato",
+      "searched": "Nome buscado",
+      "found": "Nome encontrado",
+      "wishToAdd": "**Deseja adicionar a obra encontrada?**"
+    },
+    "cancelled": "Não adicionamos nenhuma obra na watch list. Tente procurar usando\n`{{{0}}}add nome da obra`",
+    "notFound": "Não encontramos nenhuma obra com base nesse link."
+  },
+  "channelCommand": {
+    "name": "canal",
+    "aliases": ["channel", "setChannel"],
+    "description": "Define o canal que será monitorado. Embeds URL nesse canal serão adicionados a watchlist",
+    "usage": "<#canal>",
+    "onlyOne": "Apenas 1 canal pode ser monitorado por vez!",
+    "monitoringInstructions": "Para monitorar um canal, digite `{{{0}}}channel <#canal>`",
+    "stopMonitoring": "Parando de monitorar canal <#{{{0}}}>",
+    "tagChannel": "Você deve marcar o canal que quer monitorar! (Exemplo: `{{{0}}}channel #canal`)",
+    "alreadyMonitoring": "O canal {{{0}}} já está sendo monitorado!",
+    "success": "Monitorando canal {{{0}}}"
+  },
+  "helpCommand": {
+    "name": "ajuda",
+    "aliases": ["comandos", "help", "commands"],
+    "description": "Lista todos os comandos ou mostra informações sobre um comando.",
+    "usage": "[nome do comando]",
+    "title": "Comandos",
+    "argsLegend": "Argumentos obrigatórios = `<argumento>` | opcionais = `[argumento]`",
+    "translations": {
+      "description": "Descrição",
+      "aliases": "Apelidos",
+      "usage": "Uso"
+    },
+    "pagination": "Página {{{currentPage}}}/{{{numberOfPages}}}",
+    "cancelled": "A visualização dos comandos foi encerrada.",
+    "notFound": "O comando especificado não foi encontrado!"
+  },
+  "listCommand": {
+    "name": "lista",
+    "aliases": ["list", "watchlist"],
+    "description": "Lista todas as obras da watchlist.",
+    "title": "Watchlist",
+    "presentation": "Essas são as obras atualmente na watchlist",
+    "emptyError": "A watch list está vazia! Digite `{{{0}}}add <nome da obra>` para adicionar uma obra!",
+    "pagination": "Página {{{currentPage}}}/{{{numberOfPages}}}",
+    "cancelled": "A visualização da watch list foi encerrada."
+  },
+  "prefixCommand": {
+    "name": "prefixo",
+    "aliases": ["prefix", "setprefix"],
+    "description": "Altera o prefixo dos comandos do bot.",
+    "usage": "<prefixo>",
+    "onlyOne": "Apenas 1 prefixo é permitido!",
+    "success": "Prefixo alterado para `{{{0}}}`"
+  },
+  "randomCommand": {
+    "name": "aleatorio",
+    "aliases": ["sorteio", "random", "draw"],
+    "description": "Sorteia uma obra aleatória da watch list. Se quiser, filtre usando gêneros divididos por +.",
+    "usage": "[gênero]` ou\n`[gênero 1+gênero 2...]",
+    "title": "Sorteio",
+    "emptyError": "A watch list está vazia! Digite `{{{0}}}add <nome da obra>` para adicionar uma obra!",
+    "genreNotFound": "Gênero de filme não encontrado. Tente novamente.",
+    "drawAgain": "Sortear novamente",
+    "success": "Filme sorteado com sucesso",
+    "cancelled": "Sorteio de filmes cancelado"
+  },
+  "removeCommand": {
+    "name": "remover",
+    "aliases": ["deletar", "remove", "delete"],
+    "description": "Remove uma obra da watchlist",
+    "usage": "<nome da obra>",
+    "title": "Remoção de obras da watchlist",
+    "emptyError": "A watchlist está vazia! Digite `{{{0}}}add <nome da obra>` para adicionar uma obra!",
+    "notFound": "Nenhuma obra com esse nome foi encontrada na watchlist.",
+    "pagination": "Resultado {{{removeIndex}}}/{{{removeListLength}}}",
+    "success": "Obra removida com sucesso",
+    "cancelled": "A remoção de obras da watch list foi encerrada. Nenhuma obra foi removida."
+  }
+}

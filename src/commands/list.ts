@@ -4,10 +4,13 @@ import Server from "../model/Server"
 
 import { Config } from "../bot"
 
+import Mustache from 'mustache'
+const { listCommand, common } = require('../../languages/pt-BR.json')
+
 export = {
-  name: 'list',
-  aliases: ['watchlist', 'lista'],
-  description: 'Lista todas as obras da watch list',
+  name: listCommand.name,
+  aliases: listCommand.aliases,
+  description: listCommand.description,
   async execute(message:Discord.Message, args:Array<string>, { prefix }:Config) {
     const { watchlist } = await Server.findOne({serverId: message.guild?.id}, 'watchlist')
     const commandMessage = message
@@ -16,13 +19,13 @@ export = {
     const numberOfPages = Math.ceil(watchlist.length/maxInPage)
 
     const listEmbed = new Discord.MessageEmbed()
-      .setTitle('Watch list')
-      .setDescription('Essas são as obras atualmente na watch list')
+      .setTitle(listCommand.title)
+      .setDescription(listCommand.presentation)
       .addField('** **', '** **')
     
     if(!watchlist.length) {
       listEmbed.fields = []
-      listEmbed.setDescription(`A watch list está vazia! Digite \`${prefix}add <nome da obra>\` para adicionar uma obra!`)
+      listEmbed.setDescription(Mustache.render(listCommand.emptyError, [prefix]))
       return message.channel.send(listEmbed)
     }
       
@@ -30,12 +33,12 @@ export = {
     function addFields(startingIndex:number, finishingIndex:number) {
       let addFieldCount = 0
       for (let i = startingIndex; i < finishingIndex; i++) {
-        listEmbed.addField(watchlist[i].media_type === 'movie' ? 'Filme' : 'Série',
-          (watchlist[i].title)
+        listEmbed.addField(watchlist[i].media_type === 'movie' ? common.movie : common.tv,
+          watchlist[i].title
             ? (watchlist[i].title.toLowerCase() === watchlist[i].original_title.toLowerCase())
-              ? '** **'
+              ? `**[${watchlist[i].original_title}](https://www.themoviedb.org/${watchlist[i].media_type}/${watchlist[i].id})**`
               : `**[${watchlist[i].original_title}](https://www.themoviedb.org/${watchlist[i].media_type}/${watchlist[i].id})** | *${watchlist[i].title}*`
-            : `**[${watchlist[i].original_title}](https://www.themoviedb.org/${watchlist[i].media_type}/${watchlist[i].id})**`,
+            : '** **',
           true)
 
         ++addFieldCount
@@ -58,12 +61,15 @@ export = {
       listEmbed
         .addFields(
           {name: '** **', value: '** **'},
-          {name: '◀️', value: 'Página\nanterior', inline: true},
-          {name: '▶️', value: 'Próxima\npágina', inline: true},
-          {name: '❌', value: 'Cancelar', inline: true},
+          {name: '◀️', value: common.previousPage, inline: true},
+          {name: '▶️', value: common.nextPage, inline: true},
+          {name: '❌', value: common.cancel, inline: true},
           {name: '** **', value: '** **'},
         )
-        .setFooter(`Página ${currentPage}/${numberOfPages}`)
+        .setFooter(Mustache.render(listCommand.pagination, {
+          currentPage,
+          numberOfPages
+        }))
 
       const listMessage = previousMessage ? previousMessage : await message.channel.send(listEmbed)
       if (previousMessage) {
@@ -94,7 +100,7 @@ export = {
           } else {
             listEmbed.fields = []
             listEmbed
-              .setDescription('A visualização da watch list foi encerrada.')
+              .setDescription(listCommand.cancelled)
               .setFooter('')
             listMessage.reactions.removeAll()
             listMessage.edit(listEmbed)
@@ -104,7 +110,7 @@ export = {
           console.error(error)
           listEmbed.fields = []
           listEmbed
-            .setDescription('A visualização da watch list foi encerrada.')
+            .setDescription(listCommand.cancelled)
             .setFooter('')
           listMessage.reactions.removeAll()
           listMessage.edit(listEmbed)

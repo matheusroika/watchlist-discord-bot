@@ -1,5 +1,4 @@
 import { format } from 'date-fns'
-import ptBR from 'date-fns/locale/pt-BR'
 import Discord from 'discord.js'
 import Server from '../model/Server'
 
@@ -8,12 +7,15 @@ import { api } from '../services/api'
 const { images } = require("../../cache/imagesCache.json")
 const genresCache = require("../../cache/genresCache.json")
 
+import Mustache from 'mustache'
+const { addCommand, common } = require('../../languages/pt-BR.json')
+
 export = {
-  name: 'add',
-  aliases: ['new', 'adicionar', 'novo'],
-  description: 'Adiciona nova obra na watch list',
+  name: addCommand.name,
+  aliases: addCommand.aliases,
+  description: addCommand.description,
   args: true,
-  usage: '<nome da obra>',
+  usage: addCommand.usage,
   async execute(message:Discord.Message, args:Array<string>) {
     const server = await Server.findOne({serverId: message.guild?.id})
     const searchTitle = args.join(" ")
@@ -24,10 +26,10 @@ export = {
     let currentKnownForIndex = 0
     let currentQueryPage = 1
 
-    async function getMediaData(currentQueryPage:number, language:'pt-BR' | 'en-US'='pt-BR') {
+    async function getMediaData(currentQueryPage:number, selectedLanguage:'pt-BR' | 'en-US'='pt-BR') {
       const { data } = await api.get('search/multi', {
         params: {
-          language,
+          language: selectedLanguage,
           query: searchTitle,
           page: currentQueryPage,
         }
@@ -91,14 +93,29 @@ export = {
         .setThumbnail(`${images.secure_base_url}/${images.poster_sizes[4]}/${media.poster_path}`)
         .addFields(
           {name: '** **', value: '** **'},
-          {name: '◀️', value: 'Obra anterior', inline: true},
-          {name: '▶️', value: 'Próxima obra', inline: true},
+          {name: '◀️', value: common.previousMedia, inline: true},
+          {name: '▶️', value: common.nextMedia, inline: true},
           {name: '** **', value: '** **'},
-          {name: '✅', value: 'Adicionar', inline: true},
-          {name: '❌', value: 'Cancelar', inline: true},
+          {name: '✅', value: common.add, inline: true},
+          {name: '❌', value: common.cancel, inline: true},
           {name: '** **', value: '** **'},
         )
-        .setFooter(`Página ${currentQueryPage}/${mediaData.total_pages} | Resultado ${currentMediaIndex + 1}/${mediaData.results.length}${(isPerson) ? ` | Obras famosas de ${mediaData.results[currentMediaIndex].name} ${currentKnownForIndex + 1}/${mediaData.results[currentMediaIndex].known_for.length}` : ''}`)
+        .setFooter(
+          `${Mustache.render(addCommand.footer.value, {
+            currentQueryPage,
+            mediaDataTotalPages: mediaData.total_pages,
+            currentMediaIndex: currentMediaIndex + 1,
+            mediaDataResultsLength: mediaData.results.length + 1,
+          })}`
+          +
+          `${isPerson 
+            ? Mustache.render(addCommand.footer.isPerson, {
+                mediaDataName: mediaData.results[currentMediaIndex].name,
+                currentKnownForIndex: currentKnownForIndex + 1,
+                mediaDataLength: mediaData.results[currentMediaIndex].known_for.length,
+              })
+            : ''}`
+        )
 
       const movieMessage = previousMessage ? previousMessage : await message.channel.send(mediaEmbed)
       if (previousMessage) {
@@ -125,12 +142,21 @@ export = {
             for (const items of server.watchlist) {
               if (items.original_title === mediaOriginalTitle) {
                 mediaEmbed.fields = []
-                const formattedDate = format(new Date(items.addedAt), "dd/MM/yyyy 'às' HH:mm", {locale: ptBR})
-                mediaEmbed.addFields(
+                const formattedDate = format(new Date(items.addedAt), common.formatOfDate)
+                mediaEmbed
+                  .addFields(
                   {name: '** **', value: '** **'},
-                  {name: 'Adicionar na watch list', value: `${isMovie ? 'Esse filme' : 'Essa série'} já está na watch list do servidor.\nColocado por <@${items.addedBy.id}> em ${formattedDate}`},
+                  {name: addCommand.title, value: 
+                    `${isMovie
+                      ? addCommand.alreadyInWatchlist.isMovieTrue
+                      : addCommand.alreadyInWatchlist.isMovieFalse}`
+                    +
+                    `${Mustache.render(addCommand.alreadyInWatchlist.value, {
+                      itemsAddedBy: items.addedBy.id,
+                      formattedDate,
+                    })}`},
                 )
-                mediaEmbed.setFooter('')
+                  .setFooter('')
                 movieMessage.edit(mediaEmbed)
                 movieMessage.reactions.removeAll()
                 return
@@ -170,9 +196,10 @@ export = {
             await server.save()            
 
             mediaEmbed.fields = []
-            mediaEmbed.addField('Adicionar na watch list', 'Obra adicionada com sucesso')
-            mediaEmbed.setDescription('')
-            mediaEmbed.setFooter('')
+            mediaEmbed
+              .addField(addCommand.title, addCommand.success)
+              .setDescription('')
+              .setFooter('')
             movieMessage.edit(mediaEmbed)
             movieMessage.reactions.removeAll()
           } else if (reaction?.emoji.name === '◀️') {
@@ -190,12 +217,12 @@ export = {
             }
             sendMediaEmbed(movieMessage)
           } else {
-            sendCleanEmbed(mediaEmbed, movieMessage, 'Adicionar na watch list', 'Nenhuma obra adicionada a watch list.')
+            sendCleanEmbed(mediaEmbed, movieMessage, addCommand.title, addCommand.cancelled)
           }
         })
         .catch(error => {
           console.error(error)
-          sendCleanEmbed(mediaEmbed, movieMessage, 'Adicionar na watch list', 'Nenhuma obra adicionada a watch list.')
+          sendCleanEmbed(mediaEmbed, movieMessage, addCommand.title, addCommand.cancelled)
         })
     }
 

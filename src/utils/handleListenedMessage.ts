@@ -1,22 +1,25 @@
 import Discord from 'discord.js'
 import { format } from 'date-fns'
-import ptBR from 'date-fns/locale/pt-BR'
 
 import { api } from '../services/api'
 import { Config } from '../bot'
 import Server from '../model/Server'
 
 const { genres } = require("../../cache/genresCache.json")
+const { images } = require("../../cache/imagesCache.json")
+
+import Mustache from 'mustache'
+const { addCommand, listenedMessage, common } = require('../../languages/pt-BR.json')
 
 export default async function handleListenedMessage(message:Discord.Message, { prefix }:Config) {
   const server = await Server.findOne({serverId: message.guild?.id}, 'watchlist')
   const { watchlist } = server
   const commandMessage = message
 
-  async function getMedia(title:string) {
+  async function getMedia(title:string, selectedLanguage:'pt-BR' | 'en-US'='pt-BR' ) {
     const { data } = await api.get('search/multi', {
       params: {
-        language: 'pt-BR',
+        language: selectedLanguage,
         query: title,
       }
     })
@@ -41,8 +44,8 @@ export default async function handleListenedMessage(message:Discord.Message, { p
 
     if (!mediaItem) {
       mediaEmbed
-          .setTitle('Monitoramento de canal')
-          .setDescription('Não encontramos nenhuma obra com base nesse link.')
+          .setTitle(listenedMessage.title)
+          .setDescription(listenedMessage.notFound)
       message.channel.send(mediaEmbed)
 
       return
@@ -54,14 +57,30 @@ export default async function handleListenedMessage(message:Discord.Message, { p
     const media = isPerson ? mediaItem.known_for[0] : mediaItem
     const mediaOriginalTitle = isMovie ? media.original_title : media.original_name
     const mediaTitle = isMovie ? media.title : media.name
+
+    if (!!!media.overview) {
+      const mediaDataInEnglish = await getMedia(searchTitle as string, 'en-US')
+      media.overview = isPerson
+        ? mediaDataInEnglish.results[0].known_for[0].overview
+        : mediaDataInEnglish.results[0].overview
+    }
     
     for (const items of watchlist) {
       if (items.original_title === mediaOriginalTitle) {
-        const formattedDate = format(new Date(items.addedAt), "dd/MM/yyyy 'às' HH:mm", {locale: ptBR})
+        const formattedDate = format(new Date(items.addedAt), common.formatOfDate)
 
         mediaEmbed
-          .setTitle('Monitoramento de canal')
-          .setDescription(`${isMovie ? 'Esse filme' : 'Essa série'} já está na watch list do servidor.\nColocado por <@${items.addedBy.id}> em ${formattedDate}`)
+          .setTitle(listenedMessage.title)
+          .setDescription(
+            `${isMovie
+              ? addCommand.alreadyInWatchlist.isMovieTrue
+              : addCommand.alreadyInWatchlist.isMovieFalse}`
+            +
+            `${Mustache.render(addCommand.alreadyInWatchlist.value, {
+              itemsAddedBy: items.addedBy.id,
+              formattedDate,
+            })}`
+          )
         message.channel.send(mediaEmbed)
         return
       }
@@ -92,20 +111,28 @@ export default async function handleListenedMessage(message:Discord.Message, { p
       await server.save() 
       
       mediaEmbed
-        .setTitle('Monitoramento de canal')
-        .setDescription(`${isMovie ? 'O filme' : 'A série'} ${message.embeds[0].title} foi adicionad${isMovie ? 'o' : 'a'} a watch list com sucesso.`)
+        .setTitle(
+          (mediaTitle)
+            ? (mediaTitle.toLowerCase() === mediaOriginalTitle.toLowerCase())
+              ? mediaTitle
+              : `${mediaTitle} *(${mediaOriginalTitle})*`
+            : mediaOriginalTitle
+        )
+        .setURL(`https://www.themoviedb.org/${media.media_type}/${media.id}`)
+        .setThumbnail(`${images.secure_base_url}/${images.poster_sizes[4]}/${media.poster_path}`)
+        .addField(listenedMessage.title, addCommand.success)
       message.channel.send(mediaEmbed)
     } else {
       mediaEmbed
-        .setTitle('Monitoramento de canal')
-        .setDescription(`Encontramos ${isMovie ? 'um filme' : 'uma série'} com o nome parecido, mas não exato`)
+        .setTitle(listenedMessage.title)
+        .setDescription(listenedMessage.foundSimilar.description)
         .addFields(
           {name: '** **', value: '** **'},
-          {name: 'Nome buscado', value: searchTitle, inline: true},
-          {name: 'Nome encontrado', value: `${(mediaTitle) ? (mediaOriginalTitle.toLowerCase() === mediaTitle.toLowerCase()) ? mediaOriginalTitle : `${mediaOriginalTitle} *(${mediaTitle})*` : mediaOriginalTitle}`, inline: true},
-          {name: '** **', value: `**Deseja adicionar ${isMovie ? 'o filme' : 'a série'} encontrad${isMovie ? 'o' : 'a'}?**`},
-          {name: '✅', value: 'Confirmar', inline: true},
-          {name: '❌', value: 'Cancelar', inline: true},
+          {name: listenedMessage.foundSimilar.searched, value: searchTitle, inline: true},
+          {name: listenedMessage.foundSimilar.found, value: `${(mediaTitle) ? (mediaOriginalTitle.toLowerCase() === mediaTitle.toLowerCase()) ? mediaOriginalTitle : `${mediaOriginalTitle} *(${mediaTitle})*` : mediaOriginalTitle}`, inline: true},
+          {name: '** **', value: listenedMessage.foundSimilar.wishToAdd},
+          {name: '✅', value: common.confirm, inline: true},
+          {name: '❌', value: common.cancel, inline: true},
         )
       message.channel.send(mediaEmbed)
           .then(message => {
@@ -124,15 +151,24 @@ export default async function handleListenedMessage(message:Discord.Message, { p
                   
                   mediaEmbed.fields = []
                   mediaEmbed
-                    .setTitle('Monitoramento de canal')
-                    .setDescription(`O filme ${(searchTitle === mediaTitle) ? searchTitle : `${searchTitle} *(${mediaTitle})*`} foi adicionado a watch list com sucesso.`)
+                    .setTitle(
+                      (mediaTitle)
+                        ? (mediaTitle.toLowerCase() === mediaOriginalTitle.toLowerCase())
+                          ? mediaTitle
+                          : `${mediaTitle} *(${mediaOriginalTitle})*`
+                        : mediaOriginalTitle
+                    )
+                    .setURL(`https://www.themoviedb.org/${media.media_type}/${media.id}`)
+                    .setThumbnail(`${images.secure_base_url}/${images.poster_sizes[4]}/${media.poster_path}`)
+                    .setDescription('')
+                    .addField(listenedMessage.title, addCommand.success)
                   message.reactions.removeAll()
                   message.edit(mediaEmbed)
                 } else {
                   mediaEmbed.fields = []
                   mediaEmbed
-                    .setTitle('Monitoramento de canal')
-                    .setDescription(`Não adicionamos nenhuma obra na watch list. Tente procurar usando\n\`${prefix}add nome da obra\``)
+                    .setTitle(listenedMessage.title)
+                    .setDescription(Mustache.render(listenedMessage.cancelled, [prefix]))
                   message.reactions.removeAll()
                   message.edit(mediaEmbed)
                 }

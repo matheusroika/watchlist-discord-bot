@@ -4,24 +4,27 @@ import Server from '../model/Server'
 
 import { setNewChannel } from '../bot'
 
+import Mustache from 'mustache'
+const { channelCommand } = require('../../languages/pt-BR.json')
+
 export = {
-  name: 'channel',
-  aliases: ['setchannel', 'canal'],
-  description: 'Define o canal que será monitorado. Embeds URL nesse canal serão adicionados a watch list',
-  usage: '<#canal>',
+  name: channelCommand.name,
+  aliases: channelCommand.aliases,
+  description: channelCommand.description,
+  usage: channelCommand.usage,
   async execute(message:Discord.Message, args:Array<string>) {
     const config = await Server.findOne({serverId: message.guild?.id}, 'prefix channelToListen')
 
     if (args.length > 1) {
-      message.channel.send('Apenas 1 canal pode ser monitorado por vez!')
+      message.channel.send(channelCommand.onlyOne)
       return
     }
 
     if (args.length == 0) {
       if (!config.channelToListen) {
-        message.channel.send(`Para monitorar um canal, digite \`${config.prefix}channel <#canal>\``)
+        message.channel.send(Mustache.render(channelCommand.monitoringInstructions, [config.prefix]))
       } else {
-        message.channel.send(`Parando de monitorar canal <#${config.channelToListen}>`)
+        message.channel.send(Mustache.render(channelCommand.stopMonitoring, [config.channelToListen]))
         config.channelToListen = null
         await config.save()
       }
@@ -30,14 +33,20 @@ export = {
     }
 
     if (!/^<#.*>$/.test(args[0])) {
-      message.channel.send(`Você precisa marcar o canal que quer monitorar! (Exemplo: \`${config.prefix}channel #canal\`)`)
+      message.channel.send(Mustache.render(channelCommand.tagChannel, [config.prefix]))
       return
     }
     
     const normalizedChannel = args[0].replace(/^<#|>$/g, '')
+
+    if (normalizedChannel === config.channelToListen) {
+      message.channel.send(Mustache.render(channelCommand.alreadyMonitoring, [args[0]]))
+      return
+    }
+
     config.channelToListen = normalizedChannel
     await config.save()
     setNewChannel(config.channelToListen)
-    message.channel.send(`Monitorando canal ${args[0]}`)
+    message.channel.send(Mustache.render(channelCommand.success, [args[0]]))
   }
 }

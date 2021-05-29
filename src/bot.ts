@@ -11,6 +11,9 @@ db.connect()
 const client = new Discord.Client()
 const commands = new Discord.Collection()
 
+import Mustache from 'mustache'
+const language = require('../languages/pt-BR.json')
+
 export interface Config {
   prefix: string;
   channelToListen: string | null;
@@ -78,17 +81,21 @@ client.on("message", async message => {
   if (!command) return
 
   if (command.args && !commandArgs.length) {
-    let reply = 'Esse comando requer argumentos!';
+    let reply = language.bot.commandArgs;
   
     if (command.usage) {
-      reply += `\nVocê deve usá-lo dessa maneira: \`${config.prefix}${command.name} ${command.usage}\``;
+      reply += Mustache.render(language.bot.commandArgsUsage, {
+        configPrefix: config.prefix,
+        commandName: command.name,
+        commandUsage: command.usage,
+      });
     }
   
     return message.channel.send(reply);
   }
 
   try {
-    if (command.name === 'help') {
+    if (command.name === language.helpCommand.name || language.helpCommand.aliases.includes(command.name)) {
       command.execute(message, commandArgs, commands, config)
       return
     }

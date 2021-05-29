@@ -5,11 +5,14 @@ import Server from '../model/Server'
 import { Config } from '../bot'
 const { images } = require("../../cache/imagesCache.json")
 
+import Mustache from 'mustache'
+const { randomCommand, common } = require('../../languages/pt-BR.json')
+
 export = {
-  name: 'random',
-  aliases: ['draw', 'aleatorio', 'sorteio'],
-  description: 'Sorteia uma obra aleatória da watch list. Se quiser, filtre usando gêneros divididos por +.',
-  usage: '[gênero]` ou\n`[gênero 1+gênero 2...]',
+  name: randomCommand.name,
+  aliases: randomCommand.aliases,
+  description: randomCommand.description,
+  usage: randomCommand.usage,
   async execute(message:Discord.Message, args:Array<string>, { prefix }:Config) {
     const { watchlist } = await Server.findOne({serverId: message.guild?.id}, 'watchlist')
     const commandMessage = message
@@ -17,8 +20,8 @@ export = {
 
     if(!watchlist.length) {
       const errorEmbed = new Discord.MessageEmbed()
-        .setTitle('Sorteio')
-        .setDescription(`A watch list está vazia! Digite \`${prefix}add <nome da obra>\` para adicionar uma obra!`)
+        .setTitle(randomCommand.title)
+        .setDescription(Mustache.render(randomCommand.emptyError, [prefix]))
       return message.channel.send(errorEmbed)
     }
 
@@ -48,7 +51,7 @@ export = {
         const movieGenres = movie.genres.map((genre:string) => normalizeString(genre))
         
         if (!availableGenres.some(genre => argsGenres.includes(genre))) {
-          message.channel.send('Gênero de filme não encontrado. Tente novamente.')
+          message.channel.send(randomCommand.genreNotFound)
           return
         }
 
@@ -76,9 +79,9 @@ export = {
         .setThumbnail(`${images.secure_base_url}/${images.poster_sizes[4]}/${movie.poster_path}`)
         .addFields(
           {name: '** **', value: '** **'},
-          {name: '✅', value: 'Confirmar', inline: true},
-          {name: '🔁', value: 'Sortear novamente', inline: true},
-          {name: '❌', value: 'Cancelar', inline: true},
+          {name: '✅', value: common.confirm, inline: true},
+          {name: '🔁', value: randomCommand.drawAgain, inline: true},
+          {name: '❌', value: common.cancel, inline: true},
         )
 
         const movieMessage = previousMessage ? previousMessage : await message.channel.send(movieEmbed)
@@ -100,15 +103,15 @@ export = {
               movieEmbed.fields = []
               movieEmbed
                 .setDescription('')
-                .addField('Sorteio', 'Filme sorteado com sucesso')
+                .addField(randomCommand.title, randomCommand.success)
               movieMessage.edit(movieEmbed)
               movieMessage.reactions.removeAll()
               return
             } else if (reaction?.emoji.name === '❌') {
               movieEmbed.fields = []
               movieEmbed
-                .setTitle('Sorteio')
-                .setDescription('Sorteio de filmes cancelado')
+                .setTitle(randomCommand.title)
+                .setDescription(randomCommand.cancelled)
                 .setURL('')
                 .setThumbnail('')
               movieMessage.edit(movieEmbed)

@@ -5,12 +5,15 @@ import Server from '../model/Server'
 import { Config } from '../bot'
 const { images } = require("../../cache/imagesCache.json")
 
+import Mustache from 'mustache'
+const { removeCommand, common } = require('../../languages/pt-BR.json')
+
 export = {
-  name: 'remove',
-  aliases: ['delete', 'remover', 'deletar'],
-  description: 'Remove uma obra da watch list',
+  name: removeCommand.name,
+  aliases: removeCommand.aliases,
+  description: removeCommand.description,
   args: true,
-  usage: '<nome da obra>',
+  usage: removeCommand.usage,
   async execute(message:Discord.Message, args:Array<string>, { prefix }:Config) {
     const server = await Server.findOne({serverId: message.guild?.id}, 'watchlist')
     const { watchlist } = server
@@ -22,8 +25,8 @@ export = {
 
     if(!watchlist.length) {
       removeEmbed
-        .setTitle('Remoção de obras da watch list')
-        .setDescription(`A watch list está vazia! Digite \`${prefix}add <nome da obra>\` para adicionar uma obra!`)
+        .setTitle(removeCommand.title)
+        .setDescription(Mustache.render(removeCommand.emptyError, [prefix]))
       return message.channel.send(removeEmbed)
     }
 
@@ -42,8 +45,8 @@ export = {
 
     if (removeList.length === 0) {
       removeEmbed
-        .setTitle('Remoção de obras da watch list')
-        .setDescription('Nenhuma obra com esse nome foi encontrada na watch list.')
+        .setTitle(removeCommand.title)
+        .setDescription(removeCommand.notFound)
       return message.channel.send(removeEmbed)
     } else {
       sendRemoveEmbed()
@@ -65,14 +68,17 @@ export = {
         .setThumbnail(`${images.secure_base_url}/${images.poster_sizes[4]}/${removeMedia.poster_path}`)
         .addFields(
           {name: '** **', value: '** **'},
-          {name: '◀️', value: 'Obra anterior', inline: true},
-          {name: '▶️', value: 'Próxima obra', inline: true},
+          {name: '◀️', value: common.previousMedia, inline: true},
+          {name: '▶️', value: common.nextMedia, inline: true},
           {name: '** **', value: '** **'},
-          {name: '✅', value: 'Adicionar', inline: true},
-          {name: '❌', value: 'Cancelar', inline: true},
+          {name: '✅', value: common.add, inline: true},
+          {name: '❌', value: common.cancel, inline: true},
           {name: '** **', value: '** **'},
         )
-        .setFooter(`Resultado ${removeIndex + 1}/${removeList.length}`)
+        .setFooter(Mustache.render(removeCommand.pagination, {
+          removeIndex: removeIndex + 1,
+          removeListLength: removeList.length
+        }))
       
       const removeMessage = (previousMessage) ? previousMessage : await message.channel.send(removeEmbed)
       if (previousMessage) {
@@ -102,7 +108,7 @@ export = {
             removeEmbed
               .setDescription('')
               .setFooter('')
-              .addField('Resultado', 'Obra removida com sucesso')
+              .addField(removeCommand.title, removeCommand.success)
             server.watchlist = watchlist.filter((media:any) => media !== removeMedia)
             await server.save()
 
@@ -111,8 +117,8 @@ export = {
           } else {
             removeEmbed.fields = []
             removeEmbed
-              .setTitle('Remoção de obras da watch list')
-              .setDescription('A remoção de obras da watch list foi encerrada. Nenhuma obra foi removida. ')
+              .setTitle(removeCommand.title)
+              .setDescription(removeCommand.cancelled)
               .setURL('')
               .setThumbnail('')
               .setFooter('')
@@ -124,8 +130,8 @@ export = {
           console.error(error)
           removeEmbed.fields = []
           removeEmbed
-            .setTitle('Remoção de obras da watch list')
-            .setDescription('Nenhuma obra foi removida. A remoção de obras da watch list foi encerrada.')
+            .setTitle(removeCommand.title)
+            .setDescription(removeCommand.cancelled)
             .setURL('')
             .setThumbnail('')
             .setFooter('')

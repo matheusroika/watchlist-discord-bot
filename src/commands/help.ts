@@ -2,11 +2,14 @@ import Discord from 'discord.js'
 
 import { Config } from '../bot'
 
+import Mustache from 'mustache'
+const { helpCommand, common } = require('../../languages/pt-BR.json')
+
 export = {
-  name: 'help',
-  aliases: ['commands', 'ajuda', 'comandos'],
-  description: 'Lista todos os comandos ou mostra informações sobre um comando.',
-  usage: '[nome do comando]',
+  name: helpCommand.name,
+  aliases: helpCommand.aliases,
+  description: helpCommand.description,
+  usage: helpCommand.usage,
   async execute(message:Discord.Message, args:Array<string>, commands:any, { prefix }:Config) {
     if (!args.length) {
       const commandMessage = message
@@ -15,8 +18,8 @@ export = {
       const numberOfPages = Math.ceil(commands.size/maxInPage)
 
       const helpEmbed = new Discord.MessageEmbed()
-        .setTitle('Comandos')
-        .setDescription(`Argumentos obrigatórios = \`<argumento>\` | opcionais = \`[argumento]\``)
+        .setTitle(helpCommand.title)
+        .setDescription(helpCommand.argsLegend)
       
       function addFields(startingIndex:number, finishingIndex:number) {
         const commandsArray:any = Array.from(commands.values())
@@ -24,9 +27,9 @@ export = {
           helpEmbed
             .addField('** **', '** **')
             .addField(commandsArray[i].name, '** **')
-            .addField('Descrição', commandsArray[i].description, true)
-            commandsArray[i].aliases && helpEmbed.addField('Apelidos', commandsArray[i].aliases.join(', '), true)
-            helpEmbed.addField('Uso', `${prefix}${commandsArray[i].name}${(commandsArray[i].usage) ? ` \`${commandsArray[i].usage}\`` : ''}`, true)
+            .addField(helpCommand.translations.description, commandsArray[i].description, true)
+            commandsArray[i].aliases && helpEmbed.addField(helpCommand.translations.aliases, commandsArray[i].aliases.join(', '), true)
+            helpEmbed.addField(helpCommand.translations.usage, `${prefix}${commandsArray[i].name}${(commandsArray[i].usage) ? ` \`${commandsArray[i].usage}\`` : ''}`, true)
         }
       }
 
@@ -39,12 +42,15 @@ export = {
         helpEmbed
           .addFields(
             {name: '** **', value: '** **'},
-            {name: '◀️', value: 'Página\nanterior', inline: true},
-            {name: '▶️', value: 'Próxima\npágina', inline: true},
-            {name: '❌', value: 'Cancelar', inline: true},
+            {name: '◀️', value: common.previousPage, inline: true},
+            {name: '▶️', value: common.nextPage, inline: true},
+            {name: '❌', value: common.cancel, inline: true},
             {name: '** **', value: '** **'},
           )
-          .setFooter(`Página ${currentPage}/${numberOfPages}`)
+          .setFooter(Mustache.render(helpCommand.pagination, {
+            currentPage,
+            numberOfPages
+          }))
 
         const helpMessage = previousMessage ? previousMessage : await message.channel.send(helpEmbed)
         if (previousMessage) {
@@ -81,7 +87,7 @@ export = {
             } else {
               helpEmbed.fields = []
               helpEmbed
-                .setDescription('A visualização dos comandos foi encerrada.')
+                .setDescription(helpCommand.cancelled)
                 .setFooter('')
               helpMessage.reactions.removeAll()
               helpMessage.edit(helpEmbed)
@@ -91,7 +97,7 @@ export = {
             console.error(error)
             helpEmbed.fields = []
             helpEmbed
-              .setDescription('A visualização dos comandos foi encerrada.')
+              .setDescription(helpCommand.cancelled)
               .setFooter('')
             helpMessage.reactions.removeAll()
             helpMessage.edit(helpEmbed)
@@ -104,8 +110,8 @@ export = {
       const command = commands.get(commandName) || commands.find((command:any) => command.aliases && command.aliases.includes(commandName))
 
       const helpEmbed = new Discord.MessageEmbed()
-        .setTitle('Comandos')
-        .setDescription('O comando especificado não foi encontrado!')
+        .setTitle(helpCommand.title)
+        .setDescription(helpCommand.notFound)
 
       if (!command) return message.channel.send(helpEmbed)
 
@@ -113,8 +119,8 @@ export = {
         .setTitle(command.name)
         .setDescription(command.description)
         .addField('** **', '** **')
-        .addField('Apelidos', command.aliases.join(", "), true)
-        .addField('Uso', `${prefix}${command.name}${(command.usage) ? ` \`${command.usage}\`` : ''}`, true)
+        .addField(helpCommand.translations.aliases, command.aliases.join(", "), true)
+        .addField(helpCommand.translations.usage, `${prefix}${command.name}${(command.usage) ? ` \`${command.usage}\`` : ''}`, true)
 
       message.channel.send(helpEmbed)
     }    

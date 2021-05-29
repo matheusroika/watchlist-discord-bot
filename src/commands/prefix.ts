@@ -4,17 +4,20 @@ import Server from '../model/Server'
 
 import { setNewPrefix } from '../bot'
 
+import Mustache from 'mustache'
+const { prefixCommand } = require('../../languages/pt-BR.json')
+
 export = {
-  name: 'prefix',
-  aliases: ['setprefix', 'prefixo'],
-  description: 'Altera o prefixo dos comandos do bot',
+  name: prefixCommand.name,
+  aliases: prefixCommand.aliases,
+  description: prefixCommand.description,
   args: true,
-  usage: '<prefixo>',
+  usage: prefixCommand.usage,
   async execute(message:Discord.Message, args:Array<string>) {
     const config = await Server.findOne({serverId: message.guild?.id}, 'prefix channelToListen')
 
     if (args.length > 1) {
-      message.channel.send('Apenas 1 prefixo é permitido!')
+      message.channel.send(prefixCommand.onlyOne)
       return
     }
     
@@ -25,7 +28,7 @@ export = {
     }
     await config.save()
     setNewPrefix(config.prefix)
-    message.channel.send(`Prefixo alterado para \`${args[0]}\``)
+    message.channel.send(Mustache.render(prefixCommand.success, [args[0]]))
   }
   
 }
