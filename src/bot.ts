@@ -34,6 +34,16 @@ export async function setNewConfig(
   if (config) config[configType] = configParam
 }
 
+async function checkGuildsConfig(message: Discord.Message) {
+  if (Array.isArray(guildsConfig)) {
+    if (!guildsConfig.some(guild => guild.serverId === message.guild?.id)) {
+      guildsConfig = await getGuildsConfig()
+    }
+  } else {
+    guildsConfig = await getGuildsConfig()
+  }
+}
+
 client.once('ready', async () => {
 	console.log('Bot is ready!')
 })
@@ -58,13 +68,7 @@ client.on("guildCreate", async guild => {
 })
 
 client.on("messageUpdate", async (oldMessage, newMessage) => {
-  if (Array.isArray(guildsConfig)) {
-    if (!guildsConfig.some(guild => guild.serverId === oldMessage.guild?.id)) {
-      guildsConfig = await getGuildsConfig()
-    }
-  } else {
-    guildsConfig = await getGuildsConfig()
-  }
+  await checkGuildsConfig(oldMessage as Discord.Message)
 
   const config = guildsConfig.find(guild => guild.serverId === oldMessage.guild?.id)
 
@@ -74,13 +78,7 @@ client.on("messageUpdate", async (oldMessage, newMessage) => {
 })
 
 client.on("message", async message => {
-  if (Array.isArray(guildsConfig)) {
-    if (!guildsConfig.some(guild => guild.serverId === message.guild?.id)) {
-      guildsConfig = await getGuildsConfig()
-    }
-  } else {
-    guildsConfig = await getGuildsConfig()
-  }
+  await checkGuildsConfig(message)
 
   const config = guildsConfig.find((guild: any) => guild.serverId === message.guild?.id)
   if (!config?.language) return
