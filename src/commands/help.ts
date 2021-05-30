@@ -1,28 +1,28 @@
 import Discord from 'discord.js'
 
-import { Config } from '../types/bot'
+import { Command, Config } from '../types/bot'
 
 import Mustache from 'mustache'
 import getLanguages from '../utils/getLanguages'
 
 export = {
   languages: getLanguages('helpCommand', false, true),
-  async execute(message:Discord.Message, args:Array<string>, commands:any, { prefix, language }:Config) {
+  async execute(message: Discord.Message, args: Array<string>, { prefix, language }: Config, commands: Discord.Collection<string, Discord.Collection<string, Command>>) {
     const { helpCommand, common } = require(`../../languages/${language}.json`)
     
     if (!args.length) {
       const commandMessage = message
       const maxInPage = 4
       let currentPage = 1
-      const numberOfCommands = commands.get(language).length
+      const numberOfCommands = commands.get(language)?.size as number
       const numberOfPages = Math.ceil(numberOfCommands/maxInPage)
 
       const helpEmbed = new Discord.MessageEmbed()
         .setTitle(helpCommand.title)
         .setDescription(helpCommand.argsLegend)
       
-      function addFields(startingIndex:number, finishingIndex:number) {
-        const commandsArray:any = Array.from(commands.get(language).values())
+      function addFields(startingIndex: number, finishingIndex: number) {
+        const commandsArray: Command[] = Array.from(commands.get(language)?.values() as IterableIterator<Command>)
         for (let i = startingIndex; i < finishingIndex; i++) {
           helpEmbed
             .addField('** **', '** **')
@@ -33,7 +33,7 @@ export = {
         }
       }
 
-      async function sendHelpEmbed(previousMessage?:Discord.Message) {
+      async function sendHelpEmbed(previousMessage?: Discord.Message) {
         const startingIndex = (currentPage - 1) * maxInPage
         const finishingIndex = (numberOfCommands - (maxInPage * (currentPage - 1)) > maxInPage) ? currentPage * maxInPage : numberOfCommands
         
@@ -66,7 +66,7 @@ export = {
         }
         helpMessage.react('❌')
 
-        const filter = (reaction:Discord.MessageReaction, user:Discord.User) => ['◀️', '▶️', '❌'].includes(reaction.emoji.name) && user.id === commandMessage.author.id
+        const filter = (reaction: Discord.MessageReaction, user: Discord.User) => ['◀️', '▶️', '❌'].includes(reaction.emoji.name) && user.id === commandMessage.author.id
 
         helpMessage.awaitReactions(filter, { max: 1, time: 60000 })
           .then(collected => {
@@ -107,7 +107,7 @@ export = {
       sendHelpEmbed()
     } else {
       const commandName = args[0].normalize('NFD').replace(/[\u0300-\u036f]/g, "").toLowerCase()
-      const command = commands.get(commandName) || commands.find((command:any) => command.aliases && command.aliases.includes(commandName))
+      const command = commands.get(language)?.get(commandName) || commands.get(language)?.find(command => command.aliases && command.aliases.includes(commandName))
 
       const helpEmbed = new Discord.MessageEmbed()
         .setTitle(helpCommand.title)
