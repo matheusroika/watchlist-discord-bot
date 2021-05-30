@@ -2,7 +2,7 @@ import fs from 'fs'
 import path from 'path'
 import Discord from 'discord.js'
 
-import { Command, Language } from '../types/bot'
+import { Command, CommandsByLanguages } from '../types/bot'
 import availableLanguages from './getAvailableLanguages'
 
 const commandsByLanguage = new Discord.Collection<string, Discord.Collection<string, Command>>()
@@ -13,9 +13,9 @@ availableLanguages.forEach(availableLanguage => {
   const commands = new Discord.Collection<string, Command>()
 
   commandFiles.forEach(file => {
-    const command = require(`../commands/${file}`)
+    const command: CommandsByLanguages = require(`../commands/${file}`)
     
-    command.languages.forEach((language: Language) => {
+    command.languages.forEach(language => {
       let languageIndex = 0
       const languageName = Object.keys(language)[languageIndex]
       const languageObject = Object.values(language)[languageIndex]

@@ -16,12 +16,15 @@ export interface Language {
   usage?: string;
 }
 
-export interface Command {
+export interface CommandDetails {
   name: string;
   aliases: Array<string>;
   description: string;
   args?: boolean;
   usage?: string;
+}
+
+export interface Command extends CommandDetails {
   execute: (
     message: Discord.Message,
     commandArgs: string[],
@@ -29,6 +32,11 @@ export interface Command {
     commands?: Discord.Collection<string,
     Discord.Collection<string, Command>>
   ) => void;
+}
+
+export interface CommandsByLanguages {
+  languages: CommandDetails[],
+  execute: Pick<Command, 'execute'>
 }
 
 export interface Media {
