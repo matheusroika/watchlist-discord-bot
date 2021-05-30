@@ -1,3 +1,5 @@
+import fs from 'fs'
+import path from 'path'
 import { format } from 'date-fns'
 import Discord from 'discord.js'
 import Server from '../model/Server'
@@ -5,18 +7,36 @@ import Server from '../model/Server'
 import { api } from '../services/api'
 
 const { images } = require("../../cache/imagesCache.json")
-const genresCache = require("../../cache/genresCache.json")
 
 import Mustache from 'mustache'
-const { addCommand, common } = require('../../languages/pt-BR.json')
+import { Config } from '../bot'
+
+function getLanguages() {
+  const availableLanguages = fs.readdirSync(path.resolve(__dirname, '../../languages'))
+    .map(language => language.replace(/.json$/, ''))
+  
+  const languages = availableLanguages.map(language => {
+    const { addCommand } = require(`../../languages/${language}.json`)
+    return {
+      [language]: {
+        name: addCommand.name,
+        aliases: addCommand.aliases,
+        description: addCommand.description,
+        args: true,
+        usage: addCommand.usage,
+      }
+    }
+  })
+
+  return languages
+}
 
 export = {
-  name: addCommand.name,
-  aliases: addCommand.aliases,
-  description: addCommand.description,
-  args: true,
-  usage: addCommand.usage,
-  async execute(message:Discord.Message, args:Array<string>) {
+  languages: getLanguages(),
+  async execute(message:Discord.Message, args:Array<string>, { language }: Config) {
+    const { addCommand, common } = require(`../../languages/${language}.json`)
+    const genresCache = require(`../../cache/genresCache_${language}.json`)
+
     const server = await Server.findOne({serverId: message.guild?.id})
     const searchTitle = args.join(" ")
     const commandMessage = message
@@ -26,7 +46,7 @@ export = {
     let currentKnownForIndex = 0
     let currentQueryPage = 1
 
-    async function getMediaData(currentQueryPage:number, selectedLanguage:'pt-BR' | 'en-US'='pt-BR') {
+    async function getMediaData(currentQueryPage:number, selectedLanguage:string = language) {
       const { data } = await api.get('search/multi', {
         params: {
           language: selectedLanguage,

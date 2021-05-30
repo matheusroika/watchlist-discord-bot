@@ -1,16 +1,35 @@
+import fs from 'fs'
+import path from 'path'
 import Discord from 'discord.js'
 
 import { Config } from '../bot'
 
 import Mustache from 'mustache'
-const { helpCommand, common } = require('../../languages/pt-BR.json')
+
+function getLanguages() {
+  const availableLanguages = fs.readdirSync(path.resolve(__dirname, '../../languages'))
+    .map(language => language.replace(/.json$/, ''))
+  
+  const languages = availableLanguages.map(language => {
+    const { helpCommand } = require(`../../languages/${language}.json`)
+    return {
+      [language]: {
+        name: helpCommand.name,
+        aliases: helpCommand.aliases,
+        description: helpCommand.description,
+        usage: helpCommand.usage,
+      }
+    }
+  })
+
+  return languages
+}
 
 export = {
-  name: helpCommand.name,
-  aliases: helpCommand.aliases,
-  description: helpCommand.description,
-  usage: helpCommand.usage,
-  async execute(message:Discord.Message, args:Array<string>, commands:any, { prefix }:Config) {
+  languages: getLanguages(),
+  async execute(message:Discord.Message, args:Array<string>, commands:any, { prefix, language }:Config) {
+    const { helpCommand, common } = require(`../../languages/${language}.json`)
+    
     if (!args.length) {
       const commandMessage = message
       const maxInPage = 4

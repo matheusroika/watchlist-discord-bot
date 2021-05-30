@@ -1,3 +1,5 @@
+import fs from 'fs'
+import path from 'path'
 import Discord from 'discord.js'
 
 import Server from '../model/Server'
@@ -6,15 +8,32 @@ import { Config } from '../bot'
 const { images } = require("../../cache/imagesCache.json")
 
 import Mustache from 'mustache'
-const { removeCommand, common } = require('../../languages/pt-BR.json')
+
+function getLanguages() {
+  const availableLanguages = fs.readdirSync(path.resolve(__dirname, '../../languages'))
+    .map(language => language.replace(/.json$/, ''))
+  
+  const languages = availableLanguages.map(language => {
+    const { removeCommand } = require(`../../languages/${language}.json`)
+    return {
+      [language]: {
+        name: removeCommand.name,
+        aliases: removeCommand.aliases,
+        description: removeCommand.description,
+        args: true,
+        usage: removeCommand.usage,
+      }
+    }
+  })
+
+  return languages
+}
 
 export = {
-  name: removeCommand.name,
-  aliases: removeCommand.aliases,
-  description: removeCommand.description,
-  args: true,
-  usage: removeCommand.usage,
-  async execute(message:Discord.Message, args:Array<string>, { prefix }:Config) {
+  languages: getLanguages(),
+  async execute(message:Discord.Message, args:Array<string>, { prefix, language }:Config) {
+    const { removeCommand, common } = require(`../../languages/${language}.json`)
+
     const server = await Server.findOne({serverId: message.guild?.id}, 'watchlist')
     const { watchlist } = server
     const commandMessage = message

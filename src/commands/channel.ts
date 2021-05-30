@@ -1,19 +1,37 @@
+import fs from 'fs'
+import path from 'path'
 import Discord from 'discord.js'
 
 import Server from '../model/Server'
 
-import { setNewChannel } from '../bot'
+import { setNewConfig } from '../bot'
 
 import Mustache from 'mustache'
-const { channelCommand } = require('../../languages/pt-BR.json')
+
+function getLanguages() {
+  const availableLanguages = fs.readdirSync(path.resolve(__dirname, '../../languages'))
+    .map(language => language.replace(/.json$/, ''))
+  
+  const languages = availableLanguages.map(language => {
+    const { channelCommand } = require(`../../languages/${language}.json`)
+    return {
+      [language]: {
+        name: channelCommand.name,
+        aliases: channelCommand.aliases,
+        description: channelCommand.description,
+        usage: channelCommand.usage,
+      }
+    }
+  })
+
+  return languages
+}
 
 export = {
-  name: channelCommand.name,
-  aliases: channelCommand.aliases,
-  description: channelCommand.description,
-  usage: channelCommand.usage,
+  languages: getLanguages(),
   async execute(message:Discord.Message, args:Array<string>) {
-    const config = await Server.findOne({serverId: message.guild?.id}, 'prefix channelToListen')
+    const config = await Server.findOne({serverId: message.guild?.id}, 'prefix channelToListen language')
+    const { channelCommand } = require(`../../languages/${config.language}.json`)
 
     if (args.length > 1) {
       message.channel.send(channelCommand.onlyOne)
@@ -46,7 +64,7 @@ export = {
 
     config.channelToListen = normalizedChannel
     await config.save()
-    setNewChannel(config.channelToListen)
+    setNewConfig('channelToListen', config.channelToListen, message)
     message.channel.send(Mustache.render(channelCommand.success, [args[0]]))
   }
 }

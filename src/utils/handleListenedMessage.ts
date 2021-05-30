@@ -5,13 +5,15 @@ import { api } from '../services/api'
 import { Config } from '../bot'
 import Server from '../model/Server'
 
-const { genres } = require("../../cache/genresCache.json")
 const { images } = require("../../cache/imagesCache.json")
 
 import Mustache from 'mustache'
-const { addCommand, listenedMessage, common } = require('../../languages/pt-BR.json')
 
-export default async function handleListenedMessage(message:Discord.Message, { prefix }:Config) {
+
+export default async function handleListenedMessage(message:Discord.Message, { prefix, language }:Config) {
+  const { addCommand, listenedMessage, common } = require(`../../languages/${language}.json`)
+  const { genres } = require(`../../cache/genresCache_${language}.json`)
+
   const server = await Server.findOne({serverId: message.guild?.id}, 'watchlist')
   const { watchlist } = server
   const commandMessage = message

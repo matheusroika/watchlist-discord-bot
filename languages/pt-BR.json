@@ -31,18 +31,18 @@
       "value": " já está na watchlist do servidor.\nColocado por <@{{{itemsAddedBy}}}> em {{{formattedDate}}}"
     },
     "success": "Obra adicionada com sucesso",
-    "cancelled": "Nenhuma obra adicionada a watchlist."
+    "cancelled": "Nenhuma obra adicionada a watchlist"
   },
   "listenedMessage": {
     "title": "Monitoramento de canal",
     "foundSimilar": {
-      "description": "Encontramos uma obra com o nome parecido, mas não exato",
+      "description": "Encontramos uma obra com o nome parecido",
       "searched": "Nome buscado",
       "found": "Nome encontrado",
       "wishToAdd": "**Deseja adicionar a obra encontrada?**"
     },
     "cancelled": "Não adicionamos nenhuma obra na watch list. Tente procurar usando\n`{{{0}}}add nome da obra`",
-    "notFound": "Não encontramos nenhuma obra com base nesse link."
+    "notFound": "Não encontramos nenhuma obra nesse link"
   },
   "channelCommand": {
     "name": "canal",
@@ -59,7 +59,7 @@
   "helpCommand": {
     "name": "ajuda",
     "aliases": ["comandos", "help", "commands"],
-    "description": "Lista todos os comandos ou mostra informações sobre um comando.",
+    "description": "Lista todos os comandos ou mostra informações sobre um comando",
     "usage": "[nome do comando]",
     "title": "Comandos",
     "argsLegend": "Argumentos obrigatórios = `<argumento>` | opcionais = `[argumento]`",
@@ -69,23 +69,32 @@
       "usage": "Uso"
     },
     "pagination": "Página {{{currentPage}}}/{{{numberOfPages}}}",
-    "cancelled": "A visualização dos comandos foi encerrada.",
+    "cancelled": "A visualização dos comandos foi encerrada",
     "notFound": "O comando especificado não foi encontrado!"
+  },
+  "languageCommand": {
+    "name": "idioma",
+    "aliases": ["lingua", "language"],
+    "description": "Altera o idioma do bot",
+    "usage": "<idioma>",
+    "onlyOne": "Apenas 1 idioma é permitido!",
+    "languagesAvailable": "Idioma não encontrado! Esses são os idiomas disponíveis {{0}}",
+    "success": "Idioma alterado para `{{{0}}}`"
   },
   "listCommand": {
     "name": "lista",
     "aliases": ["list", "watchlist"],
-    "description": "Lista todas as obras da watchlist.",
+    "description": "Lista todas as obras da watchlist",
     "title": "Watchlist",
     "presentation": "Essas são as obras atualmente na watchlist",
     "emptyError": "A watch list está vazia! Digite `{{{0}}}add <nome da obra>` para adicionar uma obra!",
     "pagination": "Página {{{currentPage}}}/{{{numberOfPages}}}",
-    "cancelled": "A visualização da watch list foi encerrada."
+    "cancelled": "A visualização da watch list foi encerrada"
   },
   "prefixCommand": {
     "name": "prefixo",
     "aliases": ["prefix", "setprefix"],
-    "description": "Altera o prefixo dos comandos do bot.",
+    "description": "Altera o prefixo dos comandos do bot",
     "usage": "<prefixo>",
     "onlyOne": "Apenas 1 prefixo é permitido!",
     "success": "Prefixo alterado para `{{{0}}}`"
@@ -93,11 +102,11 @@
   "randomCommand": {
     "name": "aleatorio",
     "aliases": ["sorteio", "random", "draw"],
-    "description": "Sorteia uma obra aleatória da watch list. Se quiser, filtre usando gêneros divididos por +.",
+    "description": "Sorteia uma obra aleatória da watch list. Se quiser, filtre usando gêneros divididos por +",
     "usage": "[gênero]` ou\n`[gênero 1+gênero 2...]",
     "title": "Sorteio",
     "emptyError": "A watch list está vazia! Digite `{{{0}}}add <nome da obra>` para adicionar uma obra!",
-    "genreNotFound": "Gênero de filme não encontrado. Tente novamente.",
+    "genreNotFound": "Gênero de filme não encontrado. Tente novamente",
     "drawAgain": "Sortear novamente",
     "success": "Filme sorteado com sucesso",
     "cancelled": "Sorteio de filmes cancelado"
@@ -109,9 +118,9 @@
     "usage": "<nome da obra>",
     "title": "Remoção de obras da watchlist",
     "emptyError": "A watchlist está vazia! Digite `{{{0}}}add <nome da obra>` para adicionar uma obra!",
-    "notFound": "Nenhuma obra com esse nome foi encontrada na watchlist.",
+    "notFound": "Nenhuma obra com esse nome foi encontrada na watchlist",
     "pagination": "Resultado {{{removeIndex}}}/{{{removeListLength}}}",
     "success": "Obra removida com sucesso",
-    "cancelled": "A remoção de obras da watch list foi encerrada. Nenhuma obra foi removida."
+    "cancelled": "A remoção de obras da watch list foi encerrada. Nenhuma obra foi removida"
   }
 }

@@ -1,3 +1,5 @@
+import fs from 'fs'
+import path from 'path'
 import Discord from "discord.js"
 
 import Server from "../model/Server"
@@ -5,13 +7,30 @@ import Server from "../model/Server"
 import { Config } from "../bot"
 
 import Mustache from 'mustache'
-const { listCommand, common } = require('../../languages/pt-BR.json')
+
+function getLanguages() {
+  const availableLanguages = fs.readdirSync(path.resolve(__dirname, '../../languages'))
+    .map(language => language.replace(/.json$/, ''))
+  
+  const languages = availableLanguages.map(language => {
+    const { listCommand } = require(`../../languages/${language}.json`)
+    return {
+      [language]: {
+        name: listCommand.name,
+        aliases: listCommand.aliases,
+        description: listCommand.description,
+      }
+    }
+  })
+
+  return languages
+}
 
 export = {
-  name: listCommand.name,
-  aliases: listCommand.aliases,
-  description: listCommand.description,
-  async execute(message:Discord.Message, args:Array<string>, { prefix }:Config) {
+  languages: getLanguages(),
+  async execute(message:Discord.Message, args:Array<string>, { prefix, language }:Config) {
+    const { listCommand, common } = require(`../../languages/${language}.json`)
+
     const { watchlist } = await Server.findOne({serverId: message.guild?.id}, 'watchlist')
     const commandMessage = message
     const maxInPage = 10

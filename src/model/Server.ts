@@ -4,6 +4,7 @@ const serverSchema = new mongoose.Schema({
   serverId: String,
   prefix: String,
   channelToListen: {type: String, default: null},
+  language: String,
   watchlist: [
     {
       id: Number,
