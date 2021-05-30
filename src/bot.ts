@@ -26,12 +26,12 @@ let guildsConfig = (async () => {
 
 export async function setNewConfig(
   configType: 'prefix' | 'channelToListen' | 'language',
-  configParam: string,
+  newConfig: string,
   message: Discord.Message
 ) {
 
   const config = guildsConfig.find(guild => guild.serverId === message.guild?.id)
-  if (config) config[configType] = configParam
+  if (config) config[configType] = newConfig
 }
 
 async function checkGuildsConfig(message: Discord.Message) {
@@ -95,7 +95,7 @@ client.on("message", async message => {
   const commandArgs = commandBody.split(' ')
   const commandName = commandArgs.shift()?.toLowerCase()
   
-  const command:any = commands.get(config.language)?.find(command => command.name === commandName)
+  const command = commands.get(config.language)?.get(commandName as string)
     || commands.get(config.language)?.find(command => command.aliases && command.aliases.includes(commandName as string))
 
   if (!command) return
@@ -116,7 +116,7 @@ client.on("message", async message => {
 
   try {
     if (command.name === languageFile.helpCommand.name || languageFile.helpCommand.aliases.includes(command.name)) {
-      command.execute(message, commandArgs, commands, config)
+      command.execute(message, commandArgs, config, commands)
       return
     }
 

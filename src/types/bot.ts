@@ -1,3 +1,5 @@
+import Discord from 'discord.js'
+
 export interface Config {
   serverId: string;
   prefix: string;
@@ -13,6 +15,17 @@ export interface Language {
   usage?: string;
 }
 
-export interface LanguageObject {
-  [key: string]: Language[]
+export interface Command {
+  name: string;
+  aliases: Array<string>;
+  description: string;
+  args?: boolean;
+  usage?: string;
+  execute: (
+    message: Discord.Message,
+    commandArgs: string[],
+    config: Config,
+    commands?: Discord.Collection<string,
+    Discord.Collection<string, Command>>
+  ) => void;
 }
