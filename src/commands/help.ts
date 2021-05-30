@@ -1,6 +1,6 @@
 import Discord from 'discord.js'
 
-import { Command, Config } from '../types/bot'
+import { Command, Config, LanguageFile } from '../types/bot'
 
 import Mustache from 'mustache'
 import getLanguages from '../utils/getLanguages'
@@ -8,7 +8,7 @@ import getLanguages from '../utils/getLanguages'
 export = {
   languages: getLanguages('helpCommand', false, true),
   async execute(message: Discord.Message, args: Array<string>, { prefix, language }: Config, commands: Discord.Collection<string, Discord.Collection<string, Command>>) {
-    const { helpCommand, common } = require(`../../languages/${language}.json`)
+    const { helpCommand, common }: LanguageFile = require(`../../languages/${language}.json`)
     
     if (!args.length) {
       const commandMessage = message

@@ -2,7 +2,7 @@ import Discord from 'discord.js'
 
 import Server from '../models/Server'
 
-import { Config } from '../types/bot'
+import { Config, GenresCache, LanguageFile, Server as TypeServer, WatchlistMedia } from '../types/bot'
 const { images } = require("../../cache/imagesCache.json")
 
 import Mustache from 'mustache'
@@ -10,10 +10,11 @@ import getLanguages from '../utils/getLanguages'
 
 export = {
   languages: getLanguages('randomCommand', false, true),
-  async execute(message:Discord.Message, args:Array<string>, { prefix, language }:Config) {
-    const { randomCommand, common } = require(`../../languages/${language}.json`)
+  async execute(message: Discord.Message, args: Array<string>, { prefix, language }: Config) {
+    const { randomCommand, common }: LanguageFile = require(`../../languages/${language}.json`)
+    const genresCache: GenresCache = require(`../../cache/genresCache_${language}`)
     
-    const { watchlist } = await Server.findOne({serverId: message.guild?.id}, 'watchlist')
+    const { watchlist }: TypeServer = await Server.findOne({serverId: message.guild?.id}, 'watchlist')
     const commandMessage = message
     const argsList = args.join(' ').split('+')
 
@@ -24,8 +25,8 @@ export = {
       return message.channel.send(errorEmbed)
     }
 
-    async function sendMovieEmbed(previousMessage?:Discord.Message) {
-      function getRandomInt(min:number, max:number) {
+    async function sendMediaEmbed(previousMessage?: Discord.Message) {
+      function getRandomInt(min: number, max: number) {
         return Math.floor(Math.random() * (max - min)) + min;
       }
 
@@ -34,31 +35,51 @@ export = {
       }
 
       function getAvailableGenres() {
-        let availableGenres:Array<string> = []
-        for (const movie of watchlist) {
-          availableGenres = availableGenres.concat(movie.genres)
-        }
+        const availableGenres: Array<string> = []
+
+        watchlist.forEach(media => {
+          media.genres.forEach(genre => {
+            const cachedGenre = genresCache.genres.find(cachedGenre => cachedGenre.id === Number(genre))
+            if (cachedGenre) {
+              availableGenres.push(cachedGenre.name)
+            }  
+          })
+        })
+
         return availableGenres
       }
 
+      function getMediaGenres(media: WatchlistMedia) {
+        const mediaGenres: Array<string> = []
+
+        media.genres.forEach(genre => {
+          const cachedGenre = genresCache.genres.find(cachedGenre => cachedGenre.id === Number(genre))
+          if (cachedGenre) {
+            mediaGenres.push(cachedGenre.name)
+          }  
+        })
+
+        return mediaGenres
+      }
+
       const randomIndex = getRandomInt(0, watchlist.length)
-      const movie = watchlist[randomIndex]
+      const media = watchlist[randomIndex]
 
       if (args.length) {
         const argsGenres = argsList.map(genre => normalizeString(genre))
         const availableGenres = getAvailableGenres().map(genre => normalizeString(genre))
-        const movieGenres = movie.genres.map((genre:string) => normalizeString(genre))
+        const mediaGenres = getMediaGenres(media).map(genre => normalizeString(genre))
         
         if (!availableGenres.some(genre => argsGenres.includes(genre))) {
           message.channel.send(randomCommand.genreNotFound)
           return
         }
 
-        if (!movieGenres.some((genre:string) => argsGenres.includes(genre))) {
+        if (!mediaGenres.some(genre => argsGenres.includes(genre))) {
           if (previousMessage) {
-            sendMovieEmbed(previousMessage)
+            sendMediaEmbed(previousMessage)
           } else {
-            sendMovieEmbed()
+            sendMediaEmbed()
           }
 
           return
@@ -67,15 +88,15 @@ export = {
 
       const movieEmbed = new Discord.MessageEmbed()
         .setTitle(
-          (movie.title)
-            ? (movie.title.toLowerCase() === movie.original_title.toLowerCase())
-              ? movie.title
-              : `${movie.title} *(${movie.original_title})*`
-            : movie.original_title
+          (media.title)
+            ? (media.title.toLowerCase() === media.original_title.toLowerCase())
+              ? media.title
+              : `${media.title} *(${media.original_title})*`
+            : media.original_title
         )
-        .setURL(`https://www.themoviedb.org/${movie.media_type}/${movie.id}`)
-        .setDescription(movie.description)
-        .setThumbnail(`${images.secure_base_url}/${images.poster_sizes[4]}/${movie.poster_path}`)
+        .setURL(`https://www.themoviedb.org/${media.media_type}/${media.id}`)
+        .setDescription(media.description)
+        .setThumbnail(`${images.secure_base_url}/${images.poster_sizes[4]}/${media.poster_path}`)
         .addFields(
           {name: '** **', value: '** **'},
           {name: '✅', value: common.confirm, inline: true},
@@ -92,7 +113,7 @@ export = {
         movieMessage.react('🔁')
         movieMessage.react('❌')
 
-        const filter = (reaction:Discord.MessageReaction, user:Discord.User) => ['✅', '❌', '🔁'].includes(reaction.emoji.name) && user.id === commandMessage.author.id
+        const filter = (reaction: Discord.MessageReaction, user: Discord.User) => ['✅', '❌', '🔁'].includes(reaction.emoji.name) && user.id === commandMessage.author.id
 
         movieMessage.awaitReactions(filter, { max: 1, time: 60000 })
           .then(async collected => {
@@ -116,7 +137,7 @@ export = {
               movieMessage.edit(movieEmbed)
               movieMessage.reactions.removeAll()
             } else {
-              sendMovieEmbed(movieMessage)
+              sendMediaEmbed(movieMessage)
             }
           })
           .catch(error => {
@@ -127,6 +148,6 @@ export = {
           })
     }
 
-    sendMovieEmbed()
+    sendMediaEmbed()
   }
 }

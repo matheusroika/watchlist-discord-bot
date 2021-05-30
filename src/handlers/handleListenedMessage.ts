@@ -2,7 +2,7 @@ import Discord from 'discord.js'
 import { format } from 'date-fns'
 
 import { api } from '../services/api'
-import { Config, Media } from '../types/bot'
+import { Config, LanguageFile, Media } from '../types/bot'
 import Server from '../models/Server'
 
 const { images } = require("../../cache/imagesCache.json")
@@ -10,8 +10,7 @@ const { images } = require("../../cache/imagesCache.json")
 import Mustache from 'mustache'
 
 export default async function handleListenedMessage(message:Discord.Message, { prefix, language }:Config) {
-  const { addCommand, listenedMessage, common } = require(`../../languages/${language}.json`)
-  const { genres } = require(`../../cache/genresCache_${language}.json`)
+  const { addCommand, listenedMessage, common }: LanguageFile = require(`../../languages/${language}.json`)
 
   const server = await Server.findOne({serverId: message.guild?.id}, 'watchlist')
   const { watchlist } = server
@@ -86,20 +85,12 @@ export default async function handleListenedMessage(message:Discord.Message, { p
         return
       }
     }
-    
-    const genreList = media.genre_ids.map((genreId:number) => {
-      for (const genreType of genres) {
-        if (genreId == genreType.id) {
-          return genreType.name
-        }
-      }
-    })
 
     const mediaObject = {
       id: media.id,
       title: mediaTitle,
       original_title: mediaOriginalTitle,
-      genres: genreList,
+      genres: media.genre_ids,
       media_type: media.media_type,
       description: media.overview,
       poster_path: media.poster_path,

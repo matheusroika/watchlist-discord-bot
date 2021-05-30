@@ -6,15 +6,14 @@ import { api } from '../services/api'
 
 const { images } = require("../../cache/imagesCache.json")
 
-import { Config } from '../types/bot'
+import { Config, LanguageFile, Media, TMDBSearchResult } from '../types/bot'
 import Mustache from 'mustache'
 import getLanguages from '../utils/getLanguages'
 
 export = {
   languages: getLanguages('addCommand', true, true),
-  async execute(message:Discord.Message, args:Array<string>, { language }: Config) {
-    const { addCommand, common } = require(`../../languages/${language}.json`)
-    const genresCache = require(`../../cache/genresCache_${language}.json`)
+  async execute(message: Discord.Message, args: Array<string>, { language }: Config) {
+    const { addCommand, common }: LanguageFile = require(`../../languages/${language}.json`)
 
     const server = await Server.findOne({serverId: message.guild?.id})
     const searchTitle = args.join(" ")
@@ -25,7 +24,7 @@ export = {
     let currentKnownForIndex = 0
     let currentQueryPage = 1
 
-    async function getMediaData(currentQueryPage:number, selectedLanguage:string = language) {
+    async function getMediaData(currentQueryPage: number, selectedLanguage: string = language) {
       const { data } = await api.get('search/multi', {
         params: {
           language: selectedLanguage,
@@ -34,10 +33,10 @@ export = {
         }
       })
 
-      return data
+      return data as TMDBSearchResult
     }
 
-    function sendCleanEmbed(cleanEmbed:Discord.MessageEmbed, message:Discord.Message, title:string, description:string) {
+    function sendCleanEmbed(cleanEmbed: Discord.MessageEmbed, message: Discord.Message, title: string, description: string) {
       cleanEmbed.fields = []
       cleanEmbed
         .setTitle(title)
@@ -49,8 +48,9 @@ export = {
       message.reactions.removeAll()
     }
 
-    async function sendMediaEmbed(previousMessage?:Discord.Message) {
-      if (currentKnownForIndex > mediaData.results[currentMediaIndex]?.known_for?.length - 1 ) {
+    async function sendMediaEmbed(previousMessage?: Discord.Message) {
+      const knownForLength = mediaData.results[currentMediaIndex]?.known_for?.length as number
+      if (currentKnownForIndex > knownForLength - 1 ) {
         ++currentMediaIndex
         currentKnownForIndex = 0
       }
@@ -63,13 +63,13 @@ export = {
 
       const isPerson = (mediaData.results[currentMediaIndex].media_type == 'person')
       const media = isPerson
-        ? mediaData.results[currentMediaIndex].known_for[currentKnownForIndex]
+        ? mediaData.results[currentMediaIndex].known_for?.[currentKnownForIndex] as Media
         : mediaData.results[currentMediaIndex]
       
       if (!!!media.overview) {
         const mediaDataInEnglish = await getMediaData(currentQueryPage, 'en-US')
         media.overview = isPerson
-          ? mediaDataInEnglish.results[currentMediaIndex].known_for[currentKnownForIndex].overview
+          ? mediaDataInEnglish.results[currentMediaIndex].known_for?.[currentKnownForIndex].overview
           : mediaDataInEnglish.results[currentMediaIndex].overview
       }
 
@@ -81,7 +81,7 @@ export = {
       
       const mediaEmbed = new Discord.MessageEmbed()
         .setTitle(
-          (mediaTitle)
+          (mediaTitle && mediaOriginalTitle)
             ? (mediaTitle.toLowerCase() === mediaOriginalTitle.toLowerCase())
               ? mediaTitle
               : `${mediaTitle} *(${mediaOriginalTitle})*`
@@ -111,7 +111,7 @@ export = {
             ? Mustache.render(addCommand.footer.isPerson, {
                 mediaDataName: mediaData.results[currentMediaIndex].name,
                 currentKnownForIndex: currentKnownForIndex + 1,
-                mediaDataLength: mediaData.results[currentMediaIndex].known_for.length,
+                mediaDataLength: mediaData.results[currentMediaIndex].known_for?.length as number,
               })
             : ''}`
         )
@@ -161,14 +161,6 @@ export = {
                 return
               }
             }
-            
-            const genreList = media.genre_ids.map((genreId:number) => {
-              for (const genreType of genresCache.genres) {
-                if (genreId == genreType.id) {
-                  return genreType.name
-                }
-              }
-            })
 
             const addedBy = {
               id: commandMessage.author.id,
@@ -183,7 +175,7 @@ export = {
               id: media.id,
               title: mediaTitle,
               original_title: mediaOriginalTitle,
-              genres: genreList,
+              genres: media.genre_ids,
               media_type: media.media_type,
               description: media.overview,
               poster_path: media.poster_path,

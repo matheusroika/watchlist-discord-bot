@@ -2,15 +2,15 @@ import Discord from "discord.js"
 
 import Server from "../models/Server"
 
-import { Config } from "../types/bot"
+import { Config, LanguageFile } from "../types/bot"
 
 import Mustache from 'mustache'
 import getLanguages from '../utils/getLanguages'
 
 export = {
   languages: getLanguages('listCommand', false, false),
-  async execute(message:Discord.Message, args:Array<string>, { prefix, language }:Config) {
-    const { listCommand, common } = require(`../../languages/${language}.json`)
+  async execute(message: Discord.Message, args: Array<string>, { prefix, language }: Config) {
+    const { listCommand, common }: LanguageFile = require(`../../languages/${language}.json`)
 
     const { watchlist } = await Server.findOne({serverId: message.guild?.id}, 'watchlist')
     const commandMessage = message

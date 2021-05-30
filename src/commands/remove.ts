@@ -2,7 +2,7 @@ import Discord from 'discord.js'
 
 import Server from '../models/Server'
 
-import { Config, Server as ServerType, WatchlistMedia } from '../types/bot'
+import { Config, LanguageFile, Server as TypeServer, WatchlistMedia } from '../types/bot'
 const { images } = require("../../cache/imagesCache.json")
 
 import Mustache from 'mustache'
@@ -10,10 +10,10 @@ import getLanguages from '../utils/getLanguages'
 
 export = {
   languages: getLanguages('removeCommand', true, true),
-  async execute(message:Discord.Message, args:Array<string>, { prefix, language }:Config) {
-    const { removeCommand, common } = require(`../../languages/${language}.json`)
+  async execute(message: Discord.Message, args: Array<string>, { prefix, language }: Config) {
+    const { removeCommand, common }: LanguageFile = require(`../../languages/${language}.json`)
 
-    const server: ServerType = await Server.findOne({serverId: message.guild?.id}, 'watchlist')
+    const server: TypeServer = await Server.findOne({serverId: message.guild?.id}, 'watchlist')
     const { watchlist } = server
     const commandMessage = message
     const titleToRemove = normalizeString(args.join(" "))

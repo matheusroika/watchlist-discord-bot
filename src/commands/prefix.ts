@@ -3,15 +3,16 @@ import Discord from 'discord.js'
 import Server from '../models/Server'
 
 import { setNewConfig } from '../bot'
+import { LanguageFile } from '../types/bot'
 
 import Mustache from 'mustache'
 import getLanguages from '../utils/getLanguages'
 
 export = {
   languages: getLanguages('prefixCommand', true, true),
-  async execute(message:Discord.Message, args:Array<string>) {
+  async execute(message: Discord.Message, args: Array<string>) {
     const config = await Server.findOne({serverId: message.guild?.id}, 'prefix channelToListen language')
-    const { prefixCommand } = require(`../../languages/${config.language}.json`)
+    const { prefixCommand }: LanguageFile = require(`../../languages/${config.language}.json`)
 
     if (args.length > 1) {
       message.channel.send(prefixCommand.onlyOne)

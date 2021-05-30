@@ -10,7 +10,7 @@ const cron = require('./cron')
 
 import Mustache from 'mustache'
 
-import { Config } from './types/bot'
+import { Config, LanguageFile } from './types/bot'
 
 import commands from './utils/getCommands'
 import availableLanguages from './utils/getAvailableLanguages'
@@ -83,7 +83,7 @@ client.on("message", async message => {
   const config = guildsConfig.find(guild => guild.serverId === message.guild?.id)
   if (!config?.language) return
   
-  const languageFile = require(`../languages/${config.language}.json`)
+  const languageFile: LanguageFile = require(`../languages/${config.language}.json`)
 
   if (message.author.bot) return
   if (message.channel.id === config.channelToListen) {

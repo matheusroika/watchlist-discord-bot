@@ -8,14 +8,6 @@ export interface Config {
   language: string;
 }
 
-export interface Language {
-  name: string;
-  aliases: Array<string>;
-  description: string;
-  args?: boolean;
-  usage?: string;
-}
-
 export interface CommandDetails {
   name: string;
   aliases: Array<string>;
@@ -54,6 +46,13 @@ export interface Media {
   known_for?: Media[];
 }
 
+export interface TMDBSearchResult {
+  page: number;
+  results: Media[];
+  total_results: number;
+  total_pages: number;
+}
+
 export interface WatchlistMedia {
   addedBy: {
     id: string;
@@ -63,7 +62,7 @@ export interface WatchlistMedia {
     tag: string;
     displayAvatarURL: string;
   };
-  genres: Array<number>;
+  genres: Array<string>;
   id: Number;
   title: string;
   original_title: string;
@@ -79,4 +78,140 @@ export interface Server extends Document {
   prefix: string;
   language: string;
   watchlist: WatchlistMedia[]
+}
+
+export interface Genre {
+  id: number;
+  name: string;
+}
+
+export interface GenresCache {
+  genres: Genre[];
+}
+
+export interface LanguageFile {
+  common: {
+    add: string;
+    cancel: string;
+    confirm: string;
+    formatOfDate: string;
+    movie: string;
+    tv: string;
+    previousMedia: string;
+    nextMedia: string;
+    previousPage: string;
+    nextPage: string;
+  },
+  bot: {
+    commandArgs: string;
+    commandArgsUsage: string;
+  },
+  addCommand: {
+    name: string;
+    aliases: Array<string>;
+    description: string;
+    usage: string;
+    title: string;
+    footer: {
+      value: string;
+      isPerson: string;
+    };
+    alreadyInWatchlist: {
+      isMovieTrue: string;
+      isMovieFalse: string;
+      value: string;
+    };
+    success: string;
+    cancelled: string;
+  };
+  listenedMessage: {
+    title: string;
+    foundSimilar: {
+      description: string;
+      searched: string;
+      found: string;
+      wishToAdd: string;
+    };
+    cancelled: string;
+    notFound: string;
+  };
+  channelCommand: {
+    name: string;
+    aliases: Array<string>;
+    description: string;
+    usage: string;
+    onlyOne: string;
+    monitoringInstructions: string;
+    stopMonitoring: string;
+    tagChannel: string;
+    alreadyMonitoring: string;
+    success: string;
+  },
+  helpCommand: {
+    name: string;
+    aliases: Array<string>;
+    description: string;
+    usage: string;
+    title: string;
+    argsLegend: string;
+    translations: {
+      description: string;
+      aliases: string;
+      usage: string;
+    },
+    pagination: string;
+    cancelled: string;
+    notFound: string;
+  },
+  languageCommand: {
+    name: string;
+    aliases: Array<string>;
+    description: string;
+    usage: string;
+    onlyOne: string;
+    languagesAvailable: string;
+    success: string;
+  },
+  listCommand: {
+    name: string;
+    aliases: Array<string>;
+    description: string;
+    title: string;
+    presentation: string;
+    emptyError: string;
+    pagination: string;
+    cancelled: string;
+  },
+  prefixCommand: {
+    name: string;
+    aliases: Array<string>;
+    description: string;
+    usage: string;
+    onlyOne: string;
+    success: string;
+  },
+  randomCommand: {
+    name: string;
+    aliases: Array<string>;
+    description: string;
+    usage: string;
+    title: string;
+    emptyError: string;
+    genreNotFound: string;
+    drawAgain: string;
+    success: string;
+    cancelled: string;
+  },
+  removeCommand: {
+    name: string;
+    aliases: Array<string>;
+    description: string;
+    usage: string;
+    title: string;
+    emptyError: string;
+    notFound: string;
+    pagination: string;
+    success: string;
+    cancelled: string;
+  }
 }
