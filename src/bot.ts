@@ -1,5 +1,3 @@
-import fs from 'fs'
-import path from 'path'
 import Discord from 'discord.js'
 
 import handleListenedMessage from './utils/handleListenedMessage'
@@ -8,20 +6,22 @@ import db from './services/db'
 
 db.connect()
 const client = new Discord.Client()
-const commands = new Discord.Collection<string, Language[]>()
+const cron = require('./cron')
 
 import Mustache from 'mustache'
 
-import { Config, Language, LanguageObject } from './types/bot'
+import { Config } from './types/bot'
+
+import commands from './utils/getCommands'
+import availableLanguages from './utils/getAvailableLanguages'
 
 let languageFile: any
-
-const cron = require('./cron')
 
 async function getGuildsConfig() {
   const configs = await Server.find({}, 'serverId prefix channelToListen language')
   return configs
 }
+
 let guildsConfig = (async () => {
   await getGuildsConfig()
 })() as unknown as Config[]
@@ -41,40 +41,10 @@ client.once('ready', async () => {
 	console.log('Bot is ready!')
 })
 
-const commandFiles = fs.readdirSync(path.resolve(__dirname, './commands')).filter(file => file.endsWith('.ts'))
-const availableLanguages = fs.readdirSync(path.resolve(__dirname, '../languages')).map(language => language.replace(/.json$/, ''))
-function getLanguageObject() {
-  const languages: LanguageObject = {}
-
-  availableLanguages.forEach(language => {
-    languages[language] = []
-  })
-
-  return languages
-}
-const languageObject = getLanguageObject()
-
-availableLanguages.forEach(language => {
-  commandFiles.forEach(file => {
-    const command = require(`./commands/${file}`)
-    
-    command.languages.forEach((language: Language) => {
-      const newCommand = {
-        ...Object.values(language)[0],
-        execute: command.execute
-      }
-
-      languageObject[Object.keys(language)[0]].push(newCommand)
-    })
-  })
-
-  commands.set(language, languageObject[language])
-})
-
 client.on("guildCreate", async guild => {
   const serverCheck = await Server.findOne({serverId: guild.id})
   if (serverCheck) return
-
+  
   const locale = availableLanguages.find(language => language === guild.preferredLocale || language.startsWith(guild.preferredLocale))
    || 'en-US'
 
