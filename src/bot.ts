@@ -1,6 +1,6 @@
 import Discord from 'discord.js'
 
-import handleListenedMessage from './utils/handleListenedMessage'
+import handleListenedMessage from './handlers/handleListenedMessage'
 import Server from './models/Server'
 import db from './services/db'
 
@@ -15,8 +15,6 @@ import { Config } from './types/bot'
 import commands from './utils/getCommands'
 import availableLanguages from './utils/getAvailableLanguages'
 
-let languageFile: any
-
 async function getGuildsConfig() {
   const configs = await Server.find({}, 'serverId prefix channelToListen language')
   return configs
@@ -25,7 +23,6 @@ async function getGuildsConfig() {
 let guildsConfig = (async () => {
   await getGuildsConfig()
 })() as unknown as Config[]
-
 
 export async function setNewConfig(
   configType: 'prefix' | 'channelToListen' | 'language',
@@ -88,7 +85,7 @@ client.on("message", async message => {
   const config = guildsConfig.find((guild: any) => guild.serverId === message.guild?.id)
   if (!config?.language) return
   
-  languageFile = require(`../languages/${config.language}.json`)
+  const languageFile = require(`../languages/${config.language}.json`)
 
   if (message.author.bot) return
   if (message.channel.id === config.channelToListen) {
