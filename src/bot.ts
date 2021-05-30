@@ -80,7 +80,7 @@ client.on("messageUpdate", async (oldMessage, newMessage) => {
 client.on("message", async message => {
   await checkGuildsConfig(message)
 
-  const config = guildsConfig.find((guild: any) => guild.serverId === message.guild?.id)
+  const config = guildsConfig.find(guild => guild.serverId === message.guild?.id)
   if (!config?.language) return
   
   const languageFile = require(`../languages/${config.language}.json`)

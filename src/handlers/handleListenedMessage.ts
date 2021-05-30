@@ -2,7 +2,7 @@ import Discord from 'discord.js'
 import { format } from 'date-fns'
 
 import { api } from '../services/api'
-import { Config } from '../types/bot'
+import { Config, Media } from '../types/bot'
 import Server from '../models/Server'
 
 const { images } = require("../../cache/imagesCache.json")
@@ -25,13 +25,13 @@ export default async function handleListenedMessage(message:Discord.Message, { p
       }
     })
 
+    function filterMedia(mediaList: Media[]) {
+      return mediaList.filter(currentMedia => (currentMedia.release_date || currentMedia.first_air_date) ? true : false)
+    }
+
     const filteredMedia = data.results.length ? filterMedia(data.results) : undefined
 
     return filteredMedia ? filteredMedia[0] : filteredMedia
-  }
-
-  function filterMedia(media:any) {
-    return media.filter((currentMedia:any) => (currentMedia.release_date || currentMedia.first_air_date) ? true : false)
   }
 
   if (message.embeds.length > 0 && (message.content.includes('letterboxd') || message.content.includes('themoviedb') || message.content.includes('imdb'))) {
@@ -55,15 +55,15 @@ export default async function handleListenedMessage(message:Discord.Message, { p
     const mediaType = mediaItem.media_type
     const isMovie = (mediaType == 'movie')
     const isPerson = (mediaType == 'person')
-    const media = isPerson ? mediaItem.known_for[0] : mediaItem
+    const media = isPerson ? mediaItem.known_for?.[0] as Media : mediaItem
     const mediaOriginalTitle = isMovie ? media.original_title : media.original_name
     const mediaTitle = isMovie ? media.title : media.name
 
     if (!!!media.overview) {
-      const mediaDataInEnglish = await getMedia(searchTitle as string, 'en-US')
+      const mediaDataInEnglish = await getMedia(searchTitle as string, 'en-US') as Media
       media.overview = isPerson
-        ? mediaDataInEnglish.results[0].known_for[0].overview
-        : mediaDataInEnglish.results[0].overview
+        ? mediaDataInEnglish.known_for?.[0].overview
+        : mediaDataInEnglish.overview
     }
     
     for (const items of watchlist) {
@@ -113,7 +113,7 @@ export default async function handleListenedMessage(message:Discord.Message, { p
       
       mediaEmbed
         .setTitle(
-          (mediaTitle)
+          (mediaTitle && mediaOriginalTitle)
             ? (mediaTitle.toLowerCase() === mediaOriginalTitle.toLowerCase())
               ? mediaTitle
               : `${mediaTitle} *(${mediaOriginalTitle})*`
@@ -130,7 +130,7 @@ export default async function handleListenedMessage(message:Discord.Message, { p
         .addFields(
           {name: '** **', value: '** **'},
           {name: listenedMessage.foundSimilar.searched, value: searchTitle, inline: true},
-          {name: listenedMessage.foundSimilar.found, value: `${(mediaTitle) ? (mediaOriginalTitle.toLowerCase() === mediaTitle.toLowerCase()) ? mediaOriginalTitle : `${mediaOriginalTitle} *(${mediaTitle})*` : mediaOriginalTitle}`, inline: true},
+          {name: listenedMessage.foundSimilar.found, value: `${(mediaTitle && mediaOriginalTitle) ? (mediaOriginalTitle.toLowerCase() === mediaTitle.toLowerCase()) ? mediaOriginalTitle : `${mediaOriginalTitle} *(${mediaTitle})*` : mediaOriginalTitle}`, inline: true},
           {name: '** **', value: listenedMessage.foundSimilar.wishToAdd},
           {name: '✅', value: common.confirm, inline: true},
           {name: '❌', value: common.cancel, inline: true},
@@ -153,7 +153,7 @@ export default async function handleListenedMessage(message:Discord.Message, { p
                   mediaEmbed.fields = []
                   mediaEmbed
                     .setTitle(
-                      (mediaTitle)
+                      (mediaTitle && mediaOriginalTitle)
                         ? (mediaTitle.toLowerCase() === mediaOriginalTitle.toLowerCase())
                           ? mediaTitle
                           : `${mediaTitle} *(${mediaOriginalTitle})*`
