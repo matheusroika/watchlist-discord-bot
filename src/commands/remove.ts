@@ -2,7 +2,7 @@ import Discord from 'discord.js'
 
 import Server from '../models/Server'
 
-import { Config } from '../types/bot'
+import { Config, Server as ServerType, WatchlistMedia } from '../types/bot'
 const { images } = require("../../cache/imagesCache.json")
 
 import Mustache from 'mustache'
@@ -13,12 +13,12 @@ export = {
   async execute(message:Discord.Message, args:Array<string>, { prefix, language }:Config) {
     const { removeCommand, common } = require(`../../languages/${language}.json`)
 
-    const server = await Server.findOne({serverId: message.guild?.id}, 'watchlist')
+    const server: ServerType = await Server.findOne({serverId: message.guild?.id}, 'watchlist')
     const { watchlist } = server
     const commandMessage = message
     const titleToRemove = normalizeString(args.join(" "))
     let removeIndex = 0
-    const removeList:any = []
+    const removeList: WatchlistMedia[] = []
     const removeEmbed = new Discord.MessageEmbed()
 
     if(!watchlist.length) {
@@ -107,7 +107,7 @@ export = {
               .setDescription('')
               .setFooter('')
               .addField(removeCommand.title, removeCommand.success)
-            server.watchlist = watchlist.filter((media:any) => media !== removeMedia)
+            server.watchlist = watchlist.filter(media => media !== removeMedia)
             await server.save()
 
             removeMessage.reactions.removeAll()

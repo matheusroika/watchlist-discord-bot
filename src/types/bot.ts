@@ -1,4 +1,5 @@
 import Discord from 'discord.js'
+import { Document } from 'mongoose';
 
 export interface Config {
   serverId: string;
@@ -43,4 +44,31 @@ export interface Media {
   first_air_date?: string;
   media_type: 'movie' | 'tv' | 'person';
   known_for?: Media[];
+}
+
+export interface WatchlistMedia {
+  addedBy: {
+    id: string;
+    username: string;
+    bot: boolean;
+    createdTimestamp: number;
+    tag: string;
+    displayAvatarURL: string;
+  };
+  genres: Array<number>;
+  id: Number;
+  title: string;
+  original_title: string;
+  media_type: 'movie' | 'tv';
+  description: string;
+  poster_path: string;
+  addedAt: number;
+}
+
+export interface Server extends Document {
+  channelToListen: string | null;
+  serverId: string;
+  prefix: string;
+  language: string;
+  watchlist: WatchlistMedia[]
 }
