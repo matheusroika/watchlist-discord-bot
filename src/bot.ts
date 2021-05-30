@@ -3,7 +3,7 @@ import path from 'path'
 import Discord from 'discord.js'
 
 import handleListenedMessage from './utils/handleListenedMessage'
-import Server from './model/Server'
+import Server from './models/Server'
 import db from './services/db'
 
 db.connect()
@@ -171,7 +171,7 @@ client.on("message", async message => {
       command.execute(message, commandArgs, commands, config)
       return
     }
-    
+
     command.execute(message, commandArgs, config)
   } catch (error) {
     console.error(error)

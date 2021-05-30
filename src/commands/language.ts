@@ -2,7 +2,7 @@ import fs from 'fs'
 import path from 'path'
 import Discord from 'discord.js'
 
-import Server from '../model/Server'
+import Server from '../models/Server'
 
 import { setNewConfig } from '../bot'
 

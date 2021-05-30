@@ -3,12 +3,11 @@ import { format } from 'date-fns'
 
 import { api } from '../services/api'
 import { Config } from '../bot'
-import Server from '../model/Server'
+import Server from '../models/Server'
 
 const { images } = require("../../cache/imagesCache.json")
 
 import Mustache from 'mustache'
-
 
 export default async function handleListenedMessage(message:Discord.Message, { prefix, language }:Config) {
   const { addCommand, listenedMessage, common } = require(`../../languages/${language}.json`)
