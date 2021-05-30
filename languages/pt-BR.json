@@ -103,7 +103,7 @@
     "name": "aleatorio",
     "aliases": ["sorteio", "random", "draw"],
     "description": "Sorteia uma obra aleatória da watch list. Se quiser, filtre usando gêneros divididos por +",
-    "usage": "[gênero]` ou\n`[gênero 1+gênero 2...]",
+    "usage": "[gênero]` ou\n`[gênero1+gênero2...]",
     "title": "Sorteio",
     "emptyError": "A watch list está vazia! Digite `{{{0}}}add <nome da obra>` para adicionar uma obra!",
     "genreNotFound": "Gênero de filme não encontrado. Tente novamente",

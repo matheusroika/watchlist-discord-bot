@@ -1,5 +1,3 @@
-import fs from 'fs'
-import path from 'path'
 import Discord from 'discord.js'
 
 import Server from '../models/Server'
@@ -7,28 +5,10 @@ import Server from '../models/Server'
 import { setNewConfig } from '../bot'
 
 import Mustache from 'mustache'
-
-function getLanguages() {
-  const availableLanguages = fs.readdirSync(path.resolve(__dirname, '../../languages'))
-    .map(language => language.replace(/.json$/, ''))
-  
-  const languages = availableLanguages.map(language => {
-    const { channelCommand } = require(`../../languages/${language}.json`)
-    return {
-      [language]: {
-        name: channelCommand.name,
-        aliases: channelCommand.aliases,
-        description: channelCommand.description,
-        usage: channelCommand.usage,
-      }
-    }
-  })
-
-  return languages
-}
+import getLanguages from '../utils/getLanguages'
 
 export = {
-  languages: getLanguages(),
+  languages: getLanguages('channelCommand', false, true),
   async execute(message:Discord.Message, args:Array<string>) {
     const config = await Server.findOne({serverId: message.guild?.id}, 'prefix channelToListen language')
     const { channelCommand } = require(`../../languages/${config.language}.json`)

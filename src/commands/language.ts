@@ -7,29 +7,10 @@ import Server from '../models/Server'
 import { setNewConfig } from '../bot'
 
 import Mustache from 'mustache'
-
-function getLanguages() {
-  const availableLanguages = fs.readdirSync(path.resolve(__dirname, '../../languages'))
-    .map(language => language.replace(/.json$/, ''))
-  
-  const languages = availableLanguages.map(language => {
-    const { languageCommand } = require(`../../languages/${language}.json`)
-    return {
-      [language]: {
-        name: languageCommand.name,
-        aliases: languageCommand.aliases,
-        description: languageCommand.description,
-        args: true,
-        usage: languageCommand.usage,
-      }
-    }
-  })
-  
-  return languages
-}
+import getLanguages from '../utils/getLanguages'
 
 export = {
-  languages: getLanguages(),
+  languages: getLanguages('languageCommand', true, true),
   async execute(message:Discord.Message, args:Array<string>) {
     const config = await Server.findOne({serverId: message.guild?.id}, 'language')
     const { languageCommand } = require(`../../languages/${config.language}.json`)

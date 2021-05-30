@@ -17,7 +17,7 @@ export default async function handleListenedMessage(message:Discord.Message, { p
   const { watchlist } = server
   const commandMessage = message
 
-  async function getMedia(title:string, selectedLanguage:'pt-BR' | 'en-US'='pt-BR' ) {
+  async function getMedia(title:string, selectedLanguage:string = language ) {
     const { data } = await api.get('search/multi', {
       params: {
         language: selectedLanguage,

@@ -1,32 +1,12 @@
-import fs from 'fs'
-import path from 'path'
 import Discord from 'discord.js'
 
 import { Config } from '../bot'
 
 import Mustache from 'mustache'
-
-function getLanguages() {
-  const availableLanguages = fs.readdirSync(path.resolve(__dirname, '../../languages'))
-    .map(language => language.replace(/.json$/, ''))
-  
-  const languages = availableLanguages.map(language => {
-    const { helpCommand } = require(`../../languages/${language}.json`)
-    return {
-      [language]: {
-        name: helpCommand.name,
-        aliases: helpCommand.aliases,
-        description: helpCommand.description,
-        usage: helpCommand.usage,
-      }
-    }
-  })
-
-  return languages
-}
+import getLanguages from '../utils/getLanguages'
 
 export = {
-  languages: getLanguages(),
+  languages: getLanguages('helpCommand', false, true),
   async execute(message:Discord.Message, args:Array<string>, commands:any, { prefix, language }:Config) {
     const { helpCommand, common } = require(`../../languages/${language}.json`)
     
@@ -34,14 +14,15 @@ export = {
       const commandMessage = message
       const maxInPage = 4
       let currentPage = 1
-      const numberOfPages = Math.ceil(commands.size/maxInPage)
+      const numberOfCommands = commands.get(language).length
+      const numberOfPages = Math.ceil(numberOfCommands/maxInPage)
 
       const helpEmbed = new Discord.MessageEmbed()
         .setTitle(helpCommand.title)
         .setDescription(helpCommand.argsLegend)
       
       function addFields(startingIndex:number, finishingIndex:number) {
-        const commandsArray:any = Array.from(commands.values())
+        const commandsArray:any = Array.from(commands.get(language).values())
         for (let i = startingIndex; i < finishingIndex; i++) {
           helpEmbed
             .addField('** **', '** **')
@@ -53,8 +34,9 @@ export = {
       }
 
       async function sendHelpEmbed(previousMessage?:Discord.Message) {
+        
         const startingIndex = (currentPage - 1) * maxInPage
-        const finishingIndex = (commands.size - (maxInPage * (currentPage - 1)) > maxInPage) ? currentPage * maxInPage : commands.size
+        const finishingIndex = (numberOfCommands - (maxInPage * (currentPage - 1)) > maxInPage) ? currentPage * maxInPage : numberOfCommands
         
         addFields(startingIndex, finishingIndex)
 

@@ -1,5 +1,3 @@
-import fs from 'fs'
-import path from 'path'
 import { format } from 'date-fns'
 import Discord from 'discord.js'
 import Server from '../models/Server'
@@ -8,31 +6,12 @@ import { api } from '../services/api'
 
 const { images } = require("../../cache/imagesCache.json")
 
-import Mustache from 'mustache'
 import { Config } from '../bot'
-
-function getLanguages() {
-  const availableLanguages = fs.readdirSync(path.resolve(__dirname, '../../languages'))
-    .map(language => language.replace(/.json$/, ''))
-  
-  const languages = availableLanguages.map(language => {
-    const { addCommand } = require(`../../languages/${language}.json`)
-    return {
-      [language]: {
-        name: addCommand.name,
-        aliases: addCommand.aliases,
-        description: addCommand.description,
-        args: true,
-        usage: addCommand.usage,
-      }
-    }
-  })
-
-  return languages
-}
+import Mustache from 'mustache'
+import getLanguages from '../utils/getLanguages'
 
 export = {
-  languages: getLanguages(),
+  languages: getLanguages('addCommand', true, true),
   async execute(message:Discord.Message, args:Array<string>, { language }: Config) {
     const { addCommand, common } = require(`../../languages/${language}.json`)
     const genresCache = require(`../../cache/genresCache_${language}.json`)
