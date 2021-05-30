@@ -2,7 +2,7 @@ import Discord from "discord.js"
 
 import Server from "../models/Server"
 
-import { Config } from "../bot"
+import { Config } from "../types/bot"
 
 import Mustache from 'mustache'
 import getLanguages from '../utils/getLanguages'

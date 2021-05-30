@@ -1,6 +1,6 @@
 import Discord from 'discord.js'
 
-import { Config } from '../bot'
+import { Config } from '../types/bot'
 
 import Mustache from 'mustache'
 import getLanguages from '../utils/getLanguages'
@@ -34,7 +34,6 @@ export = {
       }
 
       async function sendHelpEmbed(previousMessage?:Discord.Message) {
-        
         const startingIndex = (currentPage - 1) * maxInPage
         const finishingIndex = (numberOfCommands - (maxInPage * (currentPage - 1)) > maxInPage) ? currentPage * maxInPage : numberOfCommands
         

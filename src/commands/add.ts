@@ -6,7 +6,7 @@ import { api } from '../services/api'
 
 const { images } = require("../../cache/imagesCache.json")
 
-import { Config } from '../bot'
+import { Config } from '../types/bot'
 import Mustache from 'mustache'
 import getLanguages from '../utils/getLanguages'
 

@@ -2,7 +2,7 @@ import Discord from 'discord.js'
 import { format } from 'date-fns'
 
 import { api } from '../services/api'
-import { Config } from '../bot'
+import { Config } from '../types/bot'
 import Server from '../models/Server'
 
 const { images } = require("../../cache/imagesCache.json")

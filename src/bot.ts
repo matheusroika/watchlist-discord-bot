@@ -7,33 +7,16 @@ import Server from './models/Server'
 import db from './services/db'
 
 db.connect()
-
 const client = new Discord.Client()
 const commands = new Discord.Collection<string, Language[]>()
 
 import Mustache from 'mustache'
+
+import { Config, Language, LanguageObject } from './types/bot'
+
 let languageFile: any
 
 const cron = require('./cron')
-
-export interface Config {
-  serverId: string;
-  prefix: string;
-  channelToListen: string | null;
-  language: string;
-}
-
-interface Language {
-  name: string;
-  aliases: Array<string>;
-  description: string;
-  args?: boolean;
-  usage?: string;
-}
-
-interface LanguageObject {
- [key: string]: Language[]
-}
 
 async function getGuildsConfig() {
   const configs = await Server.find({}, 'serverId prefix channelToListen language')

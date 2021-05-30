@@ -1,5 +1,5 @@
 {
-  "name": "watchlist-discobot",
+  "name": "discord-watchlister",
   "version": "1.0.0",
   "main": "src/bot.ts",
   "scripts": {
@@ -26,8 +26,8 @@
   },
   "nodemonConfig": {
     "ignore": [
-      "src/*.json",
-      "src/*/*.json"
+      "cache/*.json",
+      "languages/*.json"
     ]
   }
 }

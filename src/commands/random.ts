@@ -2,7 +2,7 @@ import Discord from 'discord.js'
 
 import Server from '../models/Server'
 
-import { Config } from '../bot'
+import { Config } from '../types/bot'
 const { images } = require("../../cache/imagesCache.json")
 
 import Mustache from 'mustache'
