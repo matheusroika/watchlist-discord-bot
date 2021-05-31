@@ -4,9 +4,9 @@ import Server from '../models/Server'
 
 import { api } from '../services/api'
 
-const { images } = require("../../cache/imagesCache.json")
+const { images }: ImagesCache = require("../../cache/imagesCache.json")
 
-import { Config, LanguageFile, Media, TMDBSearchResult } from '../types/bot'
+import { Config, ImagesCache, LanguageFile, Media, TMDBSearchResult } from '../types/bot'
 import Mustache from 'mustache'
 import getLanguages from '../utils/getLanguages'
 

@@ -8,7 +8,6 @@ import { LanguageFile } from '../types/bot'
 import Mustache from 'mustache'
 import getLanguages from '../utils/getLanguages'
 
-
 export = {
   languages: getLanguages('channelCommand', false, true),
   async execute(message: Discord.Message, args: Array<string>) {

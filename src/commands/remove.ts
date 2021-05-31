@@ -2,8 +2,8 @@ import Discord from 'discord.js'
 
 import Server from '../models/Server'
 
-import { Config, LanguageFile, Server as TypeServer, WatchlistMedia } from '../types/bot'
-const { images } = require("../../cache/imagesCache.json")
+import { Config, ImagesCache, LanguageFile, Server as TypeServer, WatchlistMedia } from '../types/bot'
+const { images }: ImagesCache = require("../../cache/imagesCache.json")
 
 import Mustache from 'mustache'
 import getLanguages from '../utils/getLanguages'

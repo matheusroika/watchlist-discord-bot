@@ -2,10 +2,10 @@ import Discord from 'discord.js'
 import { format } from 'date-fns'
 
 import { api } from '../services/api'
-import { Config, LanguageFile, Media } from '../types/bot'
+import { Config, ImagesCache, LanguageFile, Media } from '../types/bot'
 import Server from '../models/Server'
 
-const { images } = require("../../cache/imagesCache.json")
+const { images }: ImagesCache = require("../../cache/imagesCache.json")
 
 import Mustache from 'mustache'
 
