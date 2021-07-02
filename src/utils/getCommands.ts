@@ -7,7 +7,7 @@ import availableLanguages from './getAvailableLanguages'
 
 const commandsByLanguage = new Discord.Collection<string, Discord.Collection<string, Command>>()
 
-const commandFiles = fs.readdirSync(path.resolve(__dirname, '../commands')).filter(file => file.endsWith('.ts'))
+const commandFiles = fs.readdirSync(path.resolve(__dirname, '../commands')).filter(file => /\.(j|t)s$/.test(file))
 
 availableLanguages.forEach(availableLanguage => {
   const commands = new Discord.Collection<string, Command>()
