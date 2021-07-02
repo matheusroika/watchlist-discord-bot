@@ -4,7 +4,8 @@
   "main": "src/bot.ts",
   "scripts": {
     "dev": "nodenv . --exec nodemon",
-    "start": "ts-node src/bot.ts"
+    "start": "node ./dist/bot.js",
+    "build": "tsc"
   },
   "license": "MIT",
   "dependencies": {
