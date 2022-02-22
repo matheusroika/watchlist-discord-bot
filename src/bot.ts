@@ -6,7 +6,7 @@ import db from './services/db'
 
 db.connect()
 const client = new Discord.Client()
-const cron = require('./cron')
+const generateCaches = require('./utils/generateCaches')
 
 import Mustache from 'mustache'
 
@@ -17,19 +17,23 @@ import availableLanguages from './utils/getAvailableLanguages'
 
 async function getGuildsConfig() {
   const configs = await Server.find({}, 'serverId prefix channelToListen language')
-  return configs
+  return configs as Config[]
 }
 
-let guildsConfig = (async () => {
-  await getGuildsConfig()
-})() as unknown as Config[]
+let guildsConfig: Config[]
+getGuildsConfig()
+  .then(configs => {
+    guildsConfig = configs
+  })
+  .catch(err => {
+    console.error('Error loading Guilds configs: ' + err)
+  })
 
 export async function setNewConfig(
   configType: 'prefix' | 'channelToListen' | 'language',
   newConfig: string,
   message: Discord.Message
 ) {
-
   const config = guildsConfig.find(guild => guild.serverId === message.guild?.id)
   if (config) config[configType] = newConfig
 }
@@ -93,10 +97,10 @@ client.on("message", async message => {
   
   const commandBody = message.content.slice(config.prefix.length)
   const commandArgs = commandBody.split(' ')
-  const commandName = commandArgs.shift()?.toLowerCase()
+  const commandName = commandArgs.shift()!.toLowerCase()
   
-  const command = commands.get(config.language)?.get(commandName as string)
-    || commands.get(config.language)?.find(command => command.aliases && command.aliases.includes(commandName as string))
+  const command = commands.get(config.language)?.get(commandName)
+    || commands.get(config.language)?.find(command => command.aliases && command.aliases.includes(commandName))
 
   if (!command) return
 
