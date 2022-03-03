@@ -1,34 +1,34 @@
 import Discord from 'discord.js'
+import { SlashCommandBuilder } from '@discordjs/builders';
 import { Document } from 'mongoose';
 
 export interface Config {
   serverId: string;
-  prefix: string;
   channelToListen: string | null;
   language: string;
 }
 
-export interface CommandDetails {
-  name: string;
-  aliases: Array<string>;
-  description: string;
-  args?: boolean;
-  usage?: string;
-}
 
-export interface Command extends CommandDetails {
+export interface Command {
+  data: SlashCommandBuilder;
   execute: (
-    message: Discord.Message,
-    commandArgs: string[],
-    config: Config,
-    commands?: Discord.Collection<string,
-    Discord.Collection<string, Command>>
-  ) => void;
+    interaction: Discord.Interaction,
+    config: Config
+  ) => Promise<void>;
 }
 
-export interface CommandsByLanguages {
-  languages: CommandDetails[],
-  execute: Pick<Command, 'execute'>
+export interface LanguageData {
+  [language: string]: {
+    data: SlashCommandBuilder
+  }
+}
+
+export interface CommandByLanguages {
+  getCommand: () => Array<LanguageData>,
+  execute: (
+    interaction: Discord.Interaction,
+    config: Config
+  ) => Promise<void>;
 }
 
 export interface Media {
@@ -43,12 +43,13 @@ export interface Media {
   release_date?: string;
   first_air_date?: string;
   media_type: 'movie' | 'tv' | 'person';
-  known_for?: Media[];
+  known_for?: Array<Media>;
+  known_for_department?: string;
 }
 
 export interface TMDBSearchResult {
   page: number;
-  results: Media[];
+  results: Array<Media>;
   total_results: number;
   total_pages: number;
 }
@@ -75,9 +76,8 @@ export interface WatchlistMedia {
 export interface Server extends Document {
   channelToListen: string | null;
   serverId: string;
-  prefix: string;
   language: string;
-  watchlist: WatchlistMedia[]
+  watchlist: Array<WatchlistMedia>
 }
 
 export interface Genre {
@@ -86,7 +86,7 @@ export interface Genre {
 }
 
 export interface GenresCache {
-  genres: Genre[];
+  genres: Array<Genre>;
 }
 
 export interface ImagesCache {
@@ -103,6 +103,7 @@ export interface ImagesCache {
 }
 
 export interface LanguageFile {
+  languageName: string;
   common: {
     add: string;
     cancel: string;
@@ -115,28 +116,6 @@ export interface LanguageFile {
     previousPage: string;
     nextPage: string;
   },
-  bot: {
-    commandArgs: string;
-    commandArgsUsage: string;
-  },
-  addCommand: {
-    name: string;
-    aliases: Array<string>;
-    description: string;
-    usage: string;
-    title: string;
-    footer: {
-      value: string;
-      isPerson: string;
-    };
-    alreadyInWatchlist: {
-      isMovieTrue: string;
-      isMovieFalse: string;
-      value: string;
-    };
-    success: string;
-    cancelled: string;
-  };
   listenedMessage: {
     title: string;
     foundSimilar: {
@@ -144,87 +123,124 @@ export interface LanguageFile {
       searched: string;
       found: string;
       wishToAdd: string;
-    };
+    }
     cancelled: string;
     notFound: string;
-  };
-  channelCommand: {
-    name: string;
-    aliases: Array<string>;
-    description: string;
-    usage: string;
-    onlyOne: string;
-    monitoringInstructions: string;
-    stopMonitoring: string;
-    tagChannel: string;
-    alreadyMonitoring: string;
-    success: string;
   },
-  helpCommand: {
-    name: string;
-    aliases: Array<string>;
-    description: string;
-    usage: string;
-    title: string;
-    argsLegend: string;
-    translations: {
+  commands: {
+    add: {
+      name: string;
       description: string;
-      aliases: string;
-      usage: string;
+      longDescription: string;
+      subcommands: {
+        movie: {
+          name: string;
+          search: string;
+          description: string;
+          optionName: string;
+          optionDescription: string;
+        }
+        tv: {
+          name: string;
+          search: string;
+          description: string;
+          optionName: string;
+          optionDescription: string;
+        }
+        person: {
+          name: string;
+          search: string;
+          description: string;
+          optionName: string;
+          optionDescription: string;
+        }
+      }
+      optionName: string;
+      optionDescription: string;
+      title: string;
+      footer: {
+        value: string;
+        isPerson: string;
+      }
+      alreadyInWatchlist: {
+        isMovieTrue: string;
+        isMovieFalse: string;
+        value: string;
+      }
+      knownForDescription: string;
+      selectMedia: string;
+      selectPerson: string;
+      success: string;
+      successEphemeral: string;
+      cancelled: string;
     },
-    pagination: string;
-    cancelled: string;
-    notFound: string;
-  },
-  languageCommand: {
-    name: string;
-    aliases: Array<string>;
-    description: string;
-    usage: string;
-    onlyOne: string;
-    languagesAvailable: string;
-    success: string;
-  },
-  listCommand: {
-    name: string;
-    aliases: Array<string>;
-    description: string;
-    title: string;
-    presentation: string;
-    emptyError: string;
-    pagination: string;
-    cancelled: string;
-  },
-  prefixCommand: {
-    name: string;
-    aliases: Array<string>;
-    description: string;
-    usage: string;
-    onlyOne: string;
-    success: string;
-  },
-  randomCommand: {
-    name: string;
-    aliases: Array<string>;
-    description: string;
-    usage: string;
-    title: string;
-    emptyError: string;
-    genreNotFound: string;
-    drawAgain: string;
-    success: string;
-    cancelled: string;
-  },
-  removeCommand: {
-    name: string;
-    aliases: Array<string>;
-    description: string;
-    usage: string;
-    title: string;
-    emptyError: string;
-    notFound: string;
-    pagination: string;
-    success: string;
-    cancelled: string;
+    channel: {
+      name: string;
+      description: string;
+      longDescription: string;
+      optionName: string;
+      optionDescription: string;
+      removeOptionName: string;
+      removeOptionDescription: string;
+      removeOptionChoice: string;
+      monitoringInstructions: string;
+      currentMonitoring: string;
+      textChannel: string;
+      alreadyMonitoring: string;
+      success: string;
+      removeSuccess: string;
+    },
+    help: {
+      name: string;
+      description: string;
+      longDescription: string;
+      title: string;
+    },
+    language: {
+      name: string;
+      description: string;
+      longDescription: string;
+      optionName: string;
+      optionDescription: string;
+      success: string;
+    },
+    list: {
+      name: string;
+      description: string;
+      longDescription: string;
+      title: string;
+      presentation: string;
+      emptyError: string;
+      pagination: string;
+      cancelled: string;
+    },
+    random: {
+      name: string;
+      description: string;
+      longDescription: string;
+      optionName: string;
+      optionDescription: string;
+      title: string;
+      emptyError: string;
+      genreNotFound: string;
+      drawAgain: string;
+      success: string;
+      successEphemeral: string;
+      cancelled: string;
+    },
+    remove: {
+      name: string;
+      description: string;
+      longDescription: string;
+      optionName: string;
+      optionDescription: string;
+      title: string;
+      emptyError: string;
+      notFound: string;
+      pagination: string;
+      success: string;
+      successEphemeral: string;
+      cancelled: string;
+    }
   }
 }

@@ -1,37 +1,16 @@
 {
+  "languageName": "English",
   "common": {
     "add": "Add",
     "cancel": "Cancel",
     "confirm": "Confirm",
-    "formatOfDate": "MM/dd/yyyy HH:mm",
+    "formatOfDate": "MM/dd/yyyy 'at' hh:mm a",
     "movie": "Movie",
     "tv": "Series",
     "previousMedia": "Previous media",
     "nextMedia": "Next media",
     "previousPage": "Previous\npage",
     "nextPage": "Next\npage"
-  },
-  "bot": {
-    "commandArgs": "This command requires arguments!",
-    "commandArgsUsage": "\nYou should use it like this: `{{{configPrefix}}}{{{commandName}}} {{{commandUsage}}}`"
-  },
-  "addCommand": {
-    "name": "add",
-    "aliases": ["new"],
-    "description": "Add new media to watchlist",
-    "usage": "<media title>",
-    "title": "Add to watchlist",
-    "footer": {
-      "value": "Page {{{currentQueryPage}}}/{{{mediaDataTotalPages}}} | Result {{{currentMediaIndex}}}/{{{mediaDataResultsLength}}}",
-      "isPerson": " | {{{mediaDataName}}} famous works {{{currentKnownForIndex}}}/{{{mediaDataLength}}}"
-    },
-    "alreadyInWatchlist": {
-      "isMovieTrue": "This movie",
-      "isMovieFalse": "This series",
-      "value": " already is in the server's watchlist.\nAdded by <@{{{itemsAddedBy}}}> at {{{formattedDate}}}"
-    },
-    "success": "Media added with success",
-    "cancelled": "No media was added to the watchlist"
   },
   "listenedMessage": {
     "title": "Channel monitoring",
@@ -41,86 +20,121 @@
       "found": "Name found",
       "wishToAdd": "**Do you wish to add the found media?**"
     },
-    "cancelled": "No media was added to the watchlist. Try to search using\n`{{{0}}}add <name of the media>`",
+    "cancelled": "No media was added to the watchlist. Try to search using\n`/{{{0}}} media title`",
     "notFound": "No media was found in this link"
   },
-  "channelCommand": {
-    "name": "channel",
-    "aliases": ["setChannel"],
-    "description": "Set the monitored channel. Embeds URL in this channel will be added to the watchlist",
-    "usage": "<#channel>",
-    "onlyOne": "Only 1 channel can be monitored at time!",
-    "monitoringInstructions": "To monitor a channel, type `{{{0}}}channel <#canal>`",
-    "stopMonitoring": "No longer monitoring channel <#{{{0}}}>",
-    "tagChannel": "You must tag the channel that will be monitored! (Example: `{{{0}}}channel #channel`)",
-    "alreadyMonitoring": "The channel {{{0}}} is already being monitored!",
-    "success": "Monitoring channel {{{0}}}"
-  },
-  "helpCommand": {
-    "name": "help",
-    "aliases": ["commands"],
-    "description": "List all commands or show information about a specific commando",
-    "usage": "[command name]",
-    "title": "Commands",
-    "argsLegend": "Required arguments = `<argument>` | opcionais = `[argument]`",
-    "translations": {
-      "description": "Description",
-      "aliases": "Aliases",
-      "usage": "Usage"
+  "commands": {
+    "add": {
+      "name": "add",
+      "description": "Add new media to watchlist",
+      "longDescription": "Add new media to watchlist. Can search for movies, TV shows/series or people.",
+      "subcommands": {
+        "movie": {
+          "name": "movie",
+          "search": "movie",
+          "description": "Search for a movie",
+          "optionName": "title",
+          "optionDescription": "Title of the movie you wish to search"
+        },
+        "tv": {
+          "name": "tv",
+          "search": "tv",
+          "description": "Search for a TV shows/series",
+          "optionName": "title",
+          "optionDescription": "Title of the TV show/series you wish to search"
+        },
+        "person": {
+          "name": "person",
+          "search": "person",
+          "description": "Search for a person",
+          "optionName": "name",
+          "optionDescription": "Name of the person you wish to search"
+        }
+      },
+      "title": "Add to watchlist",
+      "footer": {
+        "value": "Page {{{currentQueryPage}}}/{{{mediaDataTotalPages}}} | Result {{{currentMediaIndex}}}/{{{mediaDataResultsLength}}}",
+        "isPerson": " | {{{mediaDataName}}} famous works {{{currentKnownForIndex}}}/{{{mediaDataLength}}}"
+      },
+      "alreadyInWatchlist": {
+        "isMovieTrue": "This movie",
+        "isMovieFalse": "This series",
+        "value": " already is in the server's watchlist.\nAdded by <@{{{itemsAddedBy}}}> at {{{formattedDate}}}"
+      },
+      "knownForDescription": "Known for {{{knownForDepartment}}} ({{{personMedias}}})",
+      "selectMedia": "Select media",
+      "selectPerson": "Select person",
+      "success": "Media added with success.\nAdded by <@{{{itemsAddedBy}}}> at {{{formattedDate}}}",
+      "successEphemeral": "Your media was added successfully to the watchlist",
+      "cancelled": "No media was added to the watchlist"
     },
-    "pagination": "Page {{{currentPage}}}/{{{numberOfPages}}}",
-    "cancelled": "Command list visualization ended",
-    "notFound": "The specified command wasn't found!"
-  },
-  "languageCommand": {
-    "name": "language",
-    "aliases": ["setlanguage"],
-    "description": "Changes bot language",
-    "usage": "<language>",
-    "onlyOne": "Only 1 language is allowed!",
-    "languagesAvailable": "Language not found! These are the languages available: `{{0}}`",
-    "success": "Language changed to `{{{0}}}`"
-  },
-  "listCommand": {
-    "name": "watchlist",
-    "aliases": ["list"],
-    "description": "Show watchlist",
-    "title": "Watchlist",
-    "presentation": "These are the media currently in the watchlist",
-    "emptyError": "The watchlist is empty! Type `{{{0}}}add <media title>` to add media!",
-    "pagination": "Page {{{currentPage}}}/{{{numberOfPages}}}",
-    "cancelled": "Watchlist visualization ended"
-  },
-  "prefixCommand": {
-    "name": "prefix",
-    "aliases": ["setprefix"],
-    "description": "Change bot commands prefix",
-    "usage": "<prefix>",
-    "onlyOne": "Only 1 prefix is allowed!",
-    "success": "Prefix changed to `{{{0}}}`"
-  },
-  "randomCommand": {
-    "name": "random",
-    "aliases": ["draw"],
-    "description": "Draw a random media from the watchlist. You can also filter using genres divided by +",
-    "usage": "[genre]` or\n`[genre1+genre2...]",
-    "title": "Draw",
-    "emptyError": "The watchlist is empty! Type `{{{0}}}add <media name>` to add media!",
-    "genreNotFound": "Genre not found. Try again",
-    "drawAgain": "Draw again",
-    "success": "Draw was successful",
-    "cancelled": "Draw cancelled"
-  },
-  "removeCommand": {
-    "name": "remove",
-    "aliases": ["delete"],
-    "description": "Remove media from the watchlist",
-    "usage": "<media name>",
-    "title": "Watchlist media removal",
-    "emptyError": "The watchlist is empty! Type `{{{0}}}add <media name>` to add media!",
-    "notFound": "Media title not found in watchlist",
-    "pagination": "Result {{{removeIndex}}}/{{{removeListLength}}}",
-    "success": "Media was removed",
-    "cancelled": "Watchlist media removal ended. No media was removed"
+    "channel": {
+      "name": "channel",
+      "description": "Set the monitored channel. If possible, URLs sent will be added to the watchlist",
+      "longDescription": "Set the monitored channel. If possible, URLs sent to this channel will be added to the watchlist. Support Embeds URL from the following services: [Letterboxd](https://letterboxd.com/), [TMDB](https://www.themoviedb.org/) and [IMDB](https://www.imdb.com/).",
+      "optionName": "channel",
+      "optionDescription": "Channel you wish to be monitored",
+      "removeOptionName": "remove",
+      "removeOptionDescription": "Remove the monitored channel",
+      "removeOptionChoice": "Yes",
+      "monitoringInstructions": "To monitor a channel, type `/{{{0}}} #channel`",
+      "currentMonitoring": "Currently monitoring channel <#{{{0}}}>",
+      "textChannel": "The monitored channel must be a text one!",
+      "alreadyMonitoring": "The channel <#{{{0}}}> is already being monitored!",
+      "success": "Monitoring channel <#{{{0}}}>",
+      "removeSuccess": "Stopping channel monitoring"
+    },
+    "help": {
+      "name": "help",
+      "description": "List all commands and their description",
+      "longDescription": "List all commands and their descriptions.",
+      "title": "Commands"
+    },
+    "language": {
+      "name": "language",
+      "description": "Changes bot language",
+      "longDescription": "Changes bot language. Available languages: {{{availableLanguages}}}.",
+      "optionName": "language",
+      "optionDescription": "Language to change to",
+      "success": "Language changed to `{{{0}}}`"
+    },
+    "list": {
+      "name": "watchlist",
+      "description": "Show all media from watchlist",
+      "longDescription": "Show all media from watchlist.",
+      "title": "Watchlist",
+      "presentation": "These are the media currently in the watchlist",
+      "emptyError": "The watchlist is empty! Type `/{{{0}}} media title` to add media!",
+      "pagination": "Page {{{currentPage}}}/{{{numberOfPages}}}",
+      "cancelled": "Watchlist visualization ended"
+    },
+    "random": {
+      "name": "random",
+      "description": "Draw a random media from the watchlist. You can also filter using genres divided by +",
+      "longDescription": "Draw a random media from the watchlist. You can also filter using genres divided by +. Example: comedy+horror",
+      "optionName": "genre",
+      "optionDescription": "One or more genres to filter the draw. For more than one genre use the format: genre1+genre2...",
+      "title": "Draw",
+      "emptyError": "The watchlist is empty! Type `/{{{0}}} media name` to add media!",
+      "genreNotFound": "Genre not found. Try again",
+      "drawAgain": "Draw again",
+      "success": "Draw was successful.\nBy {{{0}}}",
+      "successEphemeral": "Draw was successful",
+      "cancelled": "Draw cancelled"
+    },
+    "remove": {
+      "name": "remove",
+      "description": "Remove media from watchlist",
+      "longDescription": "Remove media from watchlist.",
+      "optionName": "title",
+      "optionDescription": "Title of the media you wish to remove",
+      "title": "Watchlist media removal",
+      "emptyError": "The watchlist is empty! Type `/{{{0}}} media name` to add media!",
+      "notFound": "Media title not found in watchlist",
+      "pagination": "Result {{{removeIndex}}}/{{{removeListLength}}}",
+      "successEphemeral": "Media was removed successfully",
+      "success": "Media was removed successfully by {{{0}}}",
+      "cancelled": "Watchlist media removal ended. No media was removed"
+    }
   }
 }

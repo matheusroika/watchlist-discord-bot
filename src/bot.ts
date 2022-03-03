@@ -4,19 +4,19 @@ import handleListenedMessage from './handlers/handleListenedMessage'
 import Server from './models/Server'
 import db from './services/db'
 
-db.connect()
-const client = new Discord.Client()
 const generateCaches = require('./utils/generateCaches')
-
-import Mustache from 'mustache'
-
-import { Config, LanguageFile } from './types/bot'
-
 import commands from './utils/getCommands'
 import availableLanguages from './utils/getAvailableLanguages'
+import deployCommands from './deployCommands'
+
+import { Config } from './types/bot'
+type InteractionOrMessage = Discord.CommandInteraction | Discord.Message
+
+db.connect()
+const client = new Discord.Client({ intents: [Discord.Intents.FLAGS.GUILDS, Discord.Intents.FLAGS.GUILD_MESSAGES] })
 
 async function getGuildsConfig() {
-  const configs = await Server.find({}, 'serverId prefix channelToListen language')
+  const configs = await Server.find({}, 'serverId channelToListen language')
   return configs as Config[]
 }
 
@@ -30,17 +30,19 @@ getGuildsConfig()
   })
 
 export async function setNewConfig(
-  configType: 'prefix' | 'channelToListen' | 'language',
+  configType: 'channelToListen' | 'language',
   newConfig: string,
-  message: Discord.Message
+  interaction: Discord.CommandInteraction
 ) {
-  const config = guildsConfig.find(guild => guild.serverId === message.guild?.id)
+  const config = guildsConfig.find(guild => guild.serverId === interaction.guildId)
+  if (!config) await checkGuildsConfig(interaction)
   if (config) config[configType] = newConfig
+  if (configType === 'language') await deployCommands([config?.serverId as string])
 }
 
-async function checkGuildsConfig(message: Discord.Message) {
+async function checkGuildsConfig(interaction: InteractionOrMessage) {
   if (Array.isArray(guildsConfig)) {
-    if (!guildsConfig.some(guild => guild.serverId === message.guild?.id)) {
+    if (!guildsConfig.some(guild => guild.serverId === interaction.guildId)) {
       guildsConfig = await getGuildsConfig()
     }
   } else {
@@ -50,18 +52,23 @@ async function checkGuildsConfig(message: Discord.Message) {
 
 client.once('ready', async () => {
 	console.log('Bot is ready!')
+  const guildList = client.guilds.cache.map(guild => {
+    return guild.id
+  })
+
+  await deployCommands(guildList)
 })
 
 client.on("guildCreate", async guild => {
   const serverCheck = await Server.findOne({serverId: guild.id})
   if (serverCheck) return
   
-  const locale = availableLanguages.find(language => language === guild.preferredLocale || language.startsWith(guild.preferredLocale))
-   || 'en-US'
+  const locale = availableLanguages.find(language => language === guild.preferredLocale
+    || language.startsWith(guild.preferredLocale))
+    || 'en-US'
 
   const server = {
     serverId: guild.id,
-    prefix: ".",
     language: locale
   }
 
@@ -71,62 +78,42 @@ client.on("guildCreate", async guild => {
   guildsConfig = await getGuildsConfig()
 })
 
+client.on("messageCreate", async message => {
+  await checkGuildsConfig(message)
+  const config = guildsConfig.find(guild => guild.serverId === message.guildId)
+  if (!config) return
+
+  if(message.channelId === config.channelToListen) {
+    handleListenedMessage(message, config)
+  }
+})
+
 client.on("messageUpdate", async (oldMessage, newMessage) => {
   await checkGuildsConfig(oldMessage as Discord.Message)
+  const config = guildsConfig.find(guild => guild.serverId === oldMessage.guildId)
+  if (!config) return
 
-  const config = guildsConfig.find(guild => guild.serverId === oldMessage.guild?.id)
-
-  if (oldMessage.channel.id === config?.channelToListen) {
+  if (oldMessage.channelId === config.channelToListen) {
     handleListenedMessage(newMessage as Discord.Message, config)
   }
 })
 
-client.on("message", async message => {
-  await checkGuildsConfig(message)
+client.on("interactionCreate", async interaction => {
+  if (!interaction.isCommand()) return
 
-  const config = guildsConfig.find(guild => guild.serverId === message.guild?.id)
-  if (!config?.language) return
-  
-  const languageFile: LanguageFile = require(`../languages/${config.language}.json`)
+  await checkGuildsConfig(interaction)
+  const config = guildsConfig.find(guild => guild.serverId === interaction.guildId)
+  if (!config) return
 
-  if (message.author.bot) return
-  if (message.channel.id === config.channelToListen) {
-    handleListenedMessage(message, config)
-  }
-  if (!message.content.startsWith(config.prefix)) return
-  
-  const commandBody = message.content.slice(config.prefix.length)
-  const commandArgs = commandBody.split(' ')
-  const commandName = commandArgs.shift()!.toLowerCase()
-  
-  const command = commands.get(config.language)?.get(commandName)
-    || commands.get(config.language)?.find(command => command.aliases && command.aliases.includes(commandName))
-
+  const command = commands.get(config.language)?.get(interaction.commandName)
   if (!command) return
 
-  if (command.args && !commandArgs.length) {
-    let reply = languageFile.bot.commandArgs;
-  
-    if (command.usage) {
-      reply += Mustache.render(languageFile.bot.commandArgsUsage, {
-        configPrefix: config.prefix,
-        commandName: command.name,
-        commandUsage: command.usage,
-      });
-    }
-  
-    return message.channel.send(reply);
-  }
-
   try {
-    if (command.name === languageFile.helpCommand.name || languageFile.helpCommand.aliases.includes(command.name)) {
-      command.execute(message, commandArgs, config, commands)
-      return
-    }
-
-    command.execute(message, commandArgs, config)
-  } catch (error) {
-    console.error(error)
+    await command.execute(interaction, config)
+  } catch (err) {
+    console.error('Error executing command: ' + command.data.name)
+    console.error(err)
+    await interaction.reply({ content: '**Erro**', ephemeral: true })
   }
 })
 

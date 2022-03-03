@@ -1,36 +1,51 @@
 import Discord from "discord.js"
+import { SlashCommandBuilder } from '@discordjs/builders'
+import Mustache from 'mustache'
 
 import Server from "../models/Server"
+import availableLanguages from "../utils/getAvailableLanguages"
 
 import { Config, LanguageFile } from "../types/bot"
 
-import Mustache from 'mustache'
-import getLanguages from '../utils/getLanguages'
-
 export = {
-  languages: getLanguages('listCommand', false, false),
-  async execute(message: Discord.Message, args: Array<string>, { prefix, language }: Config) {
-    const { listCommand, common }: LanguageFile = require(`../../languages/${language}.json`)
+  getCommand() {
+    const command = availableLanguages.map(language => {
+      const languageFile: LanguageFile = require(`../../languages/${language}.json`)
+      const commandTranslation = languageFile.commands.list
 
-    const { watchlist } = await Server.findOne({serverId: message.guild?.id}, 'watchlist')
-    const commandMessage = message
+      return {
+        [language]: {
+          data: new SlashCommandBuilder()
+            .setName(commandTranslation.name)
+            .setDescription(commandTranslation.description),
+        }
+      }
+    })
+  
+    return command
+  },
+  async execute(interaction: Discord.CommandInteraction, { language }: Config) {
+    const { commands, common }: LanguageFile = require(`../../languages/${language}.json`)
+    const listCommand = commands.list
+
+    const { watchlist } = await Server.findOne({serverId: interaction.guildId}, 'watchlist')
     const maxInPage = 10
     let currentPage = 1
     const numberOfPages = Math.ceil(watchlist.length/maxInPage)
 
     const listEmbed = new Discord.MessageEmbed()
       .setTitle(listCommand.title)
-      .setDescription(listCommand.presentation)
+      .setDescription(listCommand.description)
       .addField('** **', '** **')
     
     if(!watchlist.length) {
       listEmbed.fields = []
-      listEmbed.setDescription(Mustache.render(listCommand.emptyError, [prefix]))
-      return message.channel.send(listEmbed)
+      listEmbed.setDescription(Mustache.render(listCommand.emptyError, [listCommand.name]))
+      interaction.reply({ embeds: [listEmbed], ephemeral: true })
+      return
     }
-      
      
-    function addFields(startingIndex:number, finishingIndex:number) {
+    function addFields(startingIndex: number, finishingIndex: number) {
       let addFieldCount = 0
       for (let i = startingIndex; i < finishingIndex; i++) {
         listEmbed.addField(watchlist[i].media_type === 'movie' ? common.movie : common.tv,
@@ -49,7 +64,7 @@ export = {
       }
     }
 
-    async function sendListEmbed(previousMessage?:Discord.Message) {
+    async function getListEmbed() {
       const startingIndex = (currentPage - 1) * maxInPage
       const finishingIndex = (watchlist.length - (maxInPage * (currentPage - 1)) > maxInPage) ? currentPage * maxInPage : watchlist.length
 
@@ -66,57 +81,62 @@ export = {
           {name: '❌', value: common.cancel, inline: true},
           {name: '** **', value: '** **'},
         )
-        .setFooter(Mustache.render(listCommand.pagination, {
+        .setFooter({ text: Mustache.render(listCommand.pagination, {
           currentPage,
           numberOfPages
-        }))
-
-      const listMessage = previousMessage ? previousMessage : await message.channel.send(listEmbed)
-      if (previousMessage) {
-        listMessage.reactions.removeAll()
-        listMessage.edit(listEmbed)
-      }
+        }) })
+      
+      const buttonRow = new Discord.MessageActionRow()
 
       if (numberOfPages > 1 && currentPage > 1) {
-        listMessage.react('◀️')
+        buttonRow.addComponents(
+          new Discord.MessageButton()
+            .setCustomId('prevPage')
+            .setLabel('◀️')
+            .setStyle('PRIMARY')
+        )
       } 
       if (numberOfPages > 1 && currentPage < numberOfPages) {
-        listMessage.react('▶️')
+        buttonRow.addComponents(
+          new Discord.MessageButton()
+            .setCustomId('nextPage')
+            .setLabel('▶️')
+            .setStyle('PRIMARY')
+        )
       }
-      listMessage.react('❌')
+      buttonRow.addComponents(
+        new Discord.MessageButton()
+          .setCustomId('cancel')
+          .setLabel('❌')
+          .setStyle('PRIMARY'),
+      )
 
-      const filter = (reaction:Discord.MessageReaction, user:Discord.User) => ['◀️', '▶️', '❌'].includes(reaction.emoji.name) && user.id === commandMessage.author.id
-
-      listMessage.awaitReactions(filter, { max: 1, time: 60000 })
-        .then(collected => {
-          const reaction = collected.first()
-
-          if (reaction?.emoji.name === '◀️') {
-            if (numberOfPages > 1 && currentPage > 1) --currentPage
-            sendListEmbed(listMessage)
-          } else if (reaction?.emoji.name === '▶️') {
-            if (numberOfPages > 1 && currentPage < numberOfPages) ++currentPage
-            sendListEmbed(listMessage)
-          } else {
-            listEmbed.fields = []
-            listEmbed
-              .setDescription(listCommand.cancelled)
-              .setFooter('')
-            listMessage.reactions.removeAll()
-            listMessage.edit(listEmbed)
-          }
-        })
-        .catch(error => {
-          console.error(error)
-          listEmbed.fields = []
-          listEmbed
-            .setDescription(listCommand.cancelled)
-            .setFooter('')
-          listMessage.reactions.removeAll()
-          listMessage.edit(listEmbed)
-        })
+      return {
+        listEmbed,
+        buttonRow
+      }
     }
+    
+    const { buttonRow } = await getListEmbed()
+    await interaction.reply({ embeds: [listEmbed], components: [buttonRow], ephemeral: true })
 
-    sendListEmbed()
+    const collector = interaction.channel?.createMessageComponentCollector()
+    collector?.on('collect', async newInteraction => {
+      if (newInteraction.customId === 'prevPage') {
+        if (numberOfPages > 1 && currentPage > 1) --currentPage
+        const newEmbed = await getListEmbed()
+        await newInteraction.update({ embeds:[newEmbed.listEmbed], components:[newEmbed.buttonRow] })
+      } else if (newInteraction.customId === 'nextPage') {
+        if (numberOfPages > 1 && currentPage < numberOfPages) ++currentPage
+        const newEmbed = await getListEmbed()
+        await newInteraction.update({ embeds:[newEmbed.listEmbed], components:[newEmbed.buttonRow] })
+      } else if (newInteraction.customId === 'cancel') {
+        listEmbed.fields = []
+        listEmbed
+          .setDescription(listCommand.cancelled)
+          .setFooter({ text:'' })
+        newInteraction.update({ embeds: [listEmbed], components: [] })
+      }
+    })
   }
 }

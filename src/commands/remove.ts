@@ -1,22 +1,42 @@
 import Discord from 'discord.js'
+import { SlashCommandBuilder } from '@discordjs/builders'
+import Mustache from 'mustache'
 
 import Server from '../models/Server'
+import availableLanguages from '../utils/getAvailableLanguages'
 
-import { Config, ImagesCache, LanguageFile, Server as TypeServer, WatchlistMedia } from '../types/bot'
 const { images }: ImagesCache = require("../../cache/imagesCache.json")
-
-import Mustache from 'mustache'
-import getLanguages from '../utils/getLanguages'
+import { Config, ImagesCache, LanguageFile, Server as TypeServer, WatchlistMedia } from '../types/bot'
 
 export = {
-  languages: getLanguages('removeCommand', true, true),
-  async execute(message: Discord.Message, args: Array<string>, { prefix, language }: Config) {
-    const { removeCommand, common }: LanguageFile = require(`../../languages/${language}.json`)
+  getCommand() {
+    const command = availableLanguages.map(language => {
+      const languageFile: LanguageFile = require(`../../languages/${language}.json`)
+      const commandTranslation = languageFile.commands.remove
 
-    const server: TypeServer = await Server.findOne({serverId: message.guild?.id}, 'watchlist')
+      return {
+        [language]: {
+          data: new SlashCommandBuilder()
+            .setName(commandTranslation.name)
+            .setDescription(commandTranslation.description)
+            .addStringOption(option =>
+              option.setName(commandTranslation.optionName)
+                .setDescription(commandTranslation.optionDescription)
+                .setRequired(true)
+            ),
+        }
+      }
+    })
+  
+    return command
+  },
+  async execute(interaction: Discord.CommandInteraction, { language }: Config) {
+    const { commands, common }: LanguageFile = require(`../../languages/${language}.json`)
+    const removeCommand = commands.remove
+
+    const server: TypeServer = await Server.findOne({serverId: interaction.guildId}, 'watchlist')
     const { watchlist } = server
-    const commandMessage = message
-    const titleToRemove = normalizeString(args.join(" "))
+    const titleToRemove = normalizeString(interaction.options.getString(removeCommand.optionName) as string)
     let removeIndex = 0
     const removeList: WatchlistMedia[] = []
     const removeEmbed = new Discord.MessageEmbed()
@@ -24,11 +44,11 @@ export = {
     if(!watchlist.length) {
       removeEmbed
         .setTitle(removeCommand.title)
-        .setDescription(Mustache.render(removeCommand.emptyError, [prefix]))
-      return message.channel.send(removeEmbed)
+        .setDescription(Mustache.render(removeCommand.emptyError, [removeCommand.name]))
+      return interaction.reply({ embeds: [removeEmbed] })
     }
 
-    function normalizeString(string:string) {
+    function normalizeString(string: string) {
       return string.normalize('NFD').replace(/[\u0300-\u036f]/g, "").toLowerCase()
     }
 
@@ -45,12 +65,11 @@ export = {
       removeEmbed
         .setTitle(removeCommand.title)
         .setDescription(removeCommand.notFound)
-      return message.channel.send(removeEmbed)
-    } else {
-      sendRemoveEmbed()
+      await interaction.reply({ embeds: [removeEmbed] })
+      return
     }
 
-    async function sendRemoveEmbed(previousMessage?:Discord.Message) {
+    async function getRemoveEmbed() {
       const removeMedia = removeList[removeIndex]
       removeEmbed.fields = []
       removeEmbed
@@ -69,73 +88,97 @@ export = {
           {name: '◀️', value: common.previousMedia, inline: true},
           {name: '▶️', value: common.nextMedia, inline: true},
           {name: '** **', value: '** **'},
-          {name: '✅', value: common.add, inline: true},
+          {name: '✅', value: common.confirm, inline: true},
           {name: '❌', value: common.cancel, inline: true},
           {name: '** **', value: '** **'},
         )
-        .setFooter(Mustache.render(removeCommand.pagination, {
+        .setFooter({ text: Mustache.render(removeCommand.pagination, {
           removeIndex: removeIndex + 1,
           removeListLength: removeList.length
-        }))
-      
-      const removeMessage = (previousMessage) ? previousMessage : await message.channel.send(removeEmbed)
-      if (previousMessage) {
-        removeMessage.reactions.removeAll()
-        removeMessage.edit(removeEmbed)
+        }) })
+
+      const buttonRow = new Discord.MessageActionRow()
+      if (removeIndex > 0) {
+        buttonRow.addComponents(
+          new Discord.MessageButton()
+            .setCustomId('prevPage')
+            .setLabel('◀️')
+            .setStyle('PRIMARY')
+        )
       }
 
-      if (removeIndex > 0) removeMessage.react('◀️') 
-      if (removeIndex < removeList.length - 1) removeMessage.react('▶️')
-      removeMessage.react('✅')
-      removeMessage.react('❌')
+      if (removeIndex < removeList.length - 1) {
+        buttonRow.addComponents(
+          new Discord.MessageButton()
+            .setCustomId('nextPage')
+            .setLabel('▶️')
+            .setStyle('PRIMARY')
+        )
+      }
 
-      const filter = (reaction:Discord.MessageReaction, user:Discord.User) => ['◀️', '▶️', '❌', '✅'].includes(reaction.emoji.name) && user.id === commandMessage.author.id
+      buttonRow.addComponents(
+        new Discord.MessageButton()
+          .setCustomId('confirm')
+          .setLabel('✅')
+          .setStyle('PRIMARY'),
+        new Discord.MessageButton()
+          .setCustomId('cancel')
+          .setLabel('❌')
+          .setStyle('PRIMARY'),
+      )
 
-      removeMessage.awaitReactions(filter, { max: 1, time: 60000 })
-        .then(async collected => {
-          const reaction = collected.first()
-
-          if (reaction?.emoji.name === '◀️') {
-            if (removeIndex > 0) --removeIndex
-            sendRemoveEmbed(removeMessage)
-          } else if (reaction?.emoji.name === '▶️') {
-            if (removeIndex < removeList.length - 1) ++removeIndex
-            sendRemoveEmbed(removeMessage)
-          } else if (reaction?.emoji.name === '✅') {
-            removeEmbed.fields = []
-            removeEmbed
-              .setDescription('')
-              .setFooter('')
-              .addField(removeCommand.title, removeCommand.success)
-            server.watchlist = watchlist.filter(media => media !== removeMedia)
-            await server.save()
-
-            removeMessage.reactions.removeAll()
-            removeMessage.edit(removeEmbed)
-          } else {
-            removeEmbed.fields = []
-            removeEmbed
-              .setTitle(removeCommand.title)
-              .setDescription(removeCommand.cancelled)
-              .setURL('')
-              .setThumbnail('')
-              .setFooter('')
-            removeMessage.reactions.removeAll()
-            removeMessage.edit(removeEmbed)
-          }
-        })
-        .catch(error => {
-          console.error(error)
-          removeEmbed.fields = []
-          removeEmbed
-            .setTitle(removeCommand.title)
-            .setDescription(removeCommand.cancelled)
-            .setURL('')
-            .setThumbnail('')
-            .setFooter('')
-          removeMessage.reactions.removeAll()
-          removeMessage.edit(removeEmbed)
-        })
+      return {
+        removeEmbed,
+        removeMedia,
+        buttonRow
+      }
     }
+    
+    const { buttonRow } = await getRemoveEmbed()
+    await interaction.reply({ embeds: [removeEmbed], components: [buttonRow], ephemeral: true })
+
+    const collector = interaction.channel?.createMessageComponentCollector()
+    collector?.on('collect', async newInteraction => {
+      if (newInteraction.customId === 'prevPage') {
+        if (removeIndex > 0) --removeIndex
+        const newReply = await getRemoveEmbed()
+        await newInteraction.update({ embeds: [newReply.removeEmbed], components: [newReply.buttonRow] })
+      } else if (newInteraction.customId === 'nextPage') {
+        if (removeIndex < removeList.length - 1) ++removeIndex
+        const newReply = await getRemoveEmbed()
+        await newInteraction.update({ embeds: [newReply.removeEmbed], components: [newReply.buttonRow] })
+      } else if (newInteraction.customId === 'confirm') {
+        const newReply = await getRemoveEmbed()
+
+        removeEmbed.fields = []
+        removeEmbed
+          .setDescription('')
+          .setFooter({ text: '' })
+          .addField(removeCommand.title, removeCommand.successEphemeral)
+        server.watchlist = watchlist.filter(media => media !== newReply.removeMedia)
+        await server.save()
+
+        await newInteraction.update({ embeds: [removeEmbed], components: [] })
+
+        removeEmbed.fields = []
+        removeEmbed.addField(removeCommand.title, Mustache.render(removeCommand.success, [newInteraction.user.toString()]))
+
+        await newInteraction.followUp({ embeds: [removeEmbed], ephemeral: false })
+        collector.stop()
+        return
+      } else if (newInteraction.customId === 'cancel') {
+        removeEmbed.fields = []
+        removeEmbed
+          .setTitle(removeCommand.title)
+          .setDescription(removeCommand.cancelled)
+          .setURL('')
+          .setThumbnail('')
+          .setFooter({ text: '' })
+        
+        await newInteraction.update({ embeds: [removeEmbed], components: [] })
+        collector.stop()
+        return
+      }
+    })  
   }
 }

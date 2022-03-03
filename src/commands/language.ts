@@ -1,38 +1,53 @@
-import fs from 'fs'
-import path from 'path'
 import Discord from 'discord.js'
+import { SlashCommandBuilder } from '@discordjs/builders'
+import Mustache from 'mustache'
 
 import Server from '../models/Server'
-
 import { setNewConfig } from '../bot'
+import availableLanguages from '../utils/getAvailableLanguages'
+
 import { LanguageFile } from '../types/bot'
 
-import Mustache from 'mustache'
-import getLanguages from '../utils/getLanguages'
-
 export = {
-  languages: getLanguages('languageCommand', true, true),
-  async execute(message: Discord.Message, args: Array<string>) {
-    const config = await Server.findOne({serverId: message.guild?.id}, 'language')
-    const { languageCommand }: LanguageFile = require(`../../languages/${config.language}.json`)
-    const availableLanguages = fs.readdirSync(path.resolve(__dirname, '../../languages'))
-      .map(language => language.replace(/.json$/, ''))
+  getCommand() {
+    const command = availableLanguages.map(language => {
+      const languageFile: LanguageFile = require(`../../languages/${language}.json`)
+      const commandTranslation = languageFile.commands.language
 
-    if (args.length > 1) {
-      message.channel.send(languageCommand.onlyOne)
-      return
-    }
-    
-    if (availableLanguages.includes(args[0])) {
-      config.language = args[0]
-    } else {
-      message.channel.send(Mustache.render(languageCommand.languagesAvailable, [availableLanguages.join(', ')]))
-      return
-    }
+      return {
+        [language]: {
+          data: new SlashCommandBuilder()
+            .setName(commandTranslation.name)
+            .setDescription(commandTranslation.description)
+            .addStringOption(option => {
+              option.setName(commandTranslation.optionName)
+                .setDescription(commandTranslation.optionDescription)
+                .setRequired(true)
+
+              availableLanguages.filter(item => item !== language).forEach(item => {
+                const itemFile: LanguageFile = require(`../../languages/${item}.json`)
+                option.addChoice(`${itemFile.languageName} (${item})`, item)
+              })
+
+              return option
+            }),
+        }
+      }
+    })
+  
+    return command
+  },
+  async execute(interaction: Discord.CommandInteraction) {
+    const config = await Server.findOne({serverId: interaction.guildId}, 'language')
+    const { commands }: LanguageFile = require(`../../languages/${config.language}.json`)
+    const languageCommand = commands.language
+
+    const language = interaction.options.getString(languageCommand.optionName) as string
+    config.language = language
 
     await config.save()
-    setNewConfig('language', config.language, message)
+    setNewConfig('language', config.language, interaction)
     const languageImport = require(`../../languages/${config.language}.json`)
-    message.channel.send(Mustache.render(languageImport.languageCommand.success, [args[0]]))
+    await interaction.reply(Mustache.render(languageImport.commands.language.success, [language]))
   }
 }

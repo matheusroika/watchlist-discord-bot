@@ -1,51 +1,73 @@
 import Discord from 'discord.js'
+import { SlashCommandBuilder } from '@discordjs/builders'
+import Mustache from 'mustache'
 
 import Server from '../models/Server'
-
 import { setNewConfig } from '../bot'
+import availableLanguages from '../utils/getAvailableLanguages'
+
 import { LanguageFile } from '../types/bot'
 
-import Mustache from 'mustache'
-import getLanguages from '../utils/getLanguages'
-
 export = {
-  languages: getLanguages('channelCommand', false, true),
-  async execute(message: Discord.Message, args: Array<string>) {
-    const config = await Server.findOne({serverId: message.guild?.id}, 'prefix channelToListen language')
-    const { channelCommand }: LanguageFile = require(`../../languages/${config.language}.json`)
+  getCommand() {
+    const command = availableLanguages.map(language => {
+      const languageFile: LanguageFile = require(`../../languages/${language}.json`)
+      const commandTranslation = languageFile.commands.channel
 
-    if (args.length > 1) {
-      message.channel.send(channelCommand.onlyOne)
-      return
-    }
-
-    if (args.length == 0) {
-      if (!config.channelToListen) {
-        message.channel.send(Mustache.render(channelCommand.monitoringInstructions, [config.prefix]))
-      } else {
-        message.channel.send(Mustache.render(channelCommand.stopMonitoring, [config.channelToListen]))
-        config.channelToListen = null
-        await config.save()
+      return {
+        [language]: {
+          data: new SlashCommandBuilder()
+            .setName(commandTranslation.name)
+            .setDescription(commandTranslation.description)
+            .addChannelOption(option =>
+              option.setName(commandTranslation.optionName)
+                .setDescription(commandTranslation.optionDescription)
+            )
+            .addStringOption(option =>
+              option.setName(commandTranslation.removeOptionName)
+                .setDescription(commandTranslation.removeOptionDescription)
+                .addChoice(commandTranslation.removeOptionChoice, 'remove')
+            )
+        }
       }
-      
+    })
+  
+    return command
+  },
+  async execute(interaction: Discord.CommandInteraction) {
+    const config = await Server.findOne({serverId: interaction.guildId}, 'channelToListen language')
+    const { commands }: LanguageFile = require(`../../languages/${config.language}.json`)
+    const channelCommand = commands.channel
+
+    const remove = interaction.options.getString(channelCommand.removeOptionName)
+    if (remove && config.channelToListen) {
+      config.channelToListen = ''
+      await config.save()
+      setNewConfig('channelToListen', config.channelToListen, interaction)
+
+      await interaction.reply(channelCommand.removeSuccess)
       return
     }
 
-    if (!/^<#.*>$/.test(args[0])) {
-      message.channel.send(Mustache.render(channelCommand.tagChannel, [config.prefix]))
+    const channelId = interaction.options.getChannel(channelCommand.optionName)?.id
+     
+    if (!channelId && !config.channelToListen) {
+      await interaction.reply({ content: Mustache.render(channelCommand.monitoringInstructions, [channelCommand.name]), ephemeral: true })
+      return
+    } else if (!channelId) {
+      await interaction.reply({ content: Mustache.render(channelCommand.currentMonitoring, [config.channelToListen]), ephemeral: true })
+      return
+    } else if (interaction.guild?.channels.cache.get(channelId)?.type !== 'GUILD_TEXT') {
+      await interaction.reply({ content: channelCommand.textChannel, ephemeral: true })
+      return
+    } else if (channelId === config.channelToListen) {
+      await interaction.reply({ content: Mustache.render(channelCommand.alreadyMonitoring, [channelId]), ephemeral: true })
       return
     }
-    
-    const normalizedChannel = args[0].replace(/^<#|>$/g, '')
 
-    if (normalizedChannel === config.channelToListen) {
-      message.channel.send(Mustache.render(channelCommand.alreadyMonitoring, [args[0]]))
-      return
-    }
-
-    config.channelToListen = normalizedChannel
+    config.channelToListen = channelId
     await config.save()
-    setNewConfig('channelToListen', config.channelToListen, message)
-    message.channel.send(Mustache.render(channelCommand.success, [args[0]]))
+    setNewConfig('channelToListen', config.channelToListen, interaction)
+    await interaction.reply(Mustache.render(channelCommand.success, [channelId]))
   }
 }
