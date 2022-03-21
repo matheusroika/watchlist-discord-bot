@@ -7,7 +7,7 @@ import db from './services/db'
 const generateCaches = require('./utils/generateCaches')
 import commands from './utils/getCommands'
 import availableLanguages from './utils/getAvailableLanguages'
-import deployCommands from './deployCommands'
+import deployCommands from './utils/deployCommands'
 
 import { Config } from './types/bot'
 type InteractionOrMessage = Discord.CommandInteraction | Discord.Message

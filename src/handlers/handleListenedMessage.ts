@@ -1,5 +1,4 @@
 import Discord from "discord.js"
-import { format } from "date-fns"
 import Mustache from "mustache"
 
 import { api } from "../services/api"
@@ -75,16 +74,14 @@ export default async function handleListenedMessage(message: Discord.Message, { 
     }
 
     for (const items of watchlist) {
-      if (items.original_title === mediaOriginalTitle) {
-        const formattedDate = format(new Date(items.addedAt), common.formatOfDate)
-
+      if (items.original_title === mediaOriginalTitle) { 
         mediaEmbed.setTitle(listenedMessage.title).setDescription(
           `${isMovie
               ? addCommand.alreadyInWatchlist.isMovieTrue
               : addCommand.alreadyInWatchlist.isMovieFalse}` +
           `${Mustache.render(addCommand.alreadyInWatchlist.value, {
             itemsAddedBy: items.addedBy.id,
-            formattedDate,
+            formattedDate: `<t:${Math.round(items.addedAt/1000)}>`,
           })}`
         )
 
@@ -121,7 +118,7 @@ export default async function handleListenedMessage(message: Discord.Message, { 
         )
         .addField(listenedMessage.title, Mustache.render(addCommand.success, {
           itemsAddedBy: commandMessage.author.id,
-          formattedDate: format(Date.now(), common.formatOfDate)
+          formattedDate: `<t:${Math.round(Date.now()/1000)}>`
         }))
       message.channel.send({ embeds: [mediaEmbed] })
     } else {

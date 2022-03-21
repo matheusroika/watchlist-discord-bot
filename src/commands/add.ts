@@ -1,6 +1,5 @@
 import Discord from 'discord.js'
 import { SlashCommandBuilder } from '@discordjs/builders'
-import { format } from 'date-fns'
 import Mustache from 'mustache'
 
 import Server from '../models/Server'
@@ -397,13 +396,11 @@ export = {
           }
         } else if (newInteraction.customId === 'confirm') {
           const newMedia = await getMediaEmbed()
-          console.log(newMedia.media)
 
           for (const items of server.watchlist) {
             if (items.original_title === newMedia.mediaOriginalTitle) {
-              mediaEmbed.fields = []
-              const formattedDate = format(new Date(items.addedAt), common.formatOfDate)
-              mediaEmbed
+              newMedia.mediaEmbed.fields = []
+              newMedia.mediaEmbed
                 .addFields(
                 {name: '** **', value: '** **'},
                 {name: addCommand.title, value: 
@@ -413,12 +410,12 @@ export = {
                   +
                   `${Mustache.render(addCommand.alreadyInWatchlist.value, {
                     itemsAddedBy: items.addedBy.id,
-                    formattedDate,
+                    formattedDate: `<t:${Math.round(items.addedAt/1000)}>`,
                   })}`},
               )
                 .setFooter({ text: '' })
 
-              await newInteraction.update({ embeds: [mediaEmbed], components: [] })
+              await newInteraction.update({ embeds: [newMedia.mediaEmbed], components: [] })
               collector.stop()
               return
             }
@@ -460,7 +457,7 @@ export = {
           newMedia.mediaEmbed.addField(addCommand.title,
             `${Mustache.render(addCommand.success, {
             itemsAddedBy: addedBy.id,
-            formattedDate: format(mediaObject.addedAt, common.formatOfDate),
+            formattedDate: `<t:${Math.round(mediaObject.addedAt/1000)}>`,
           })}`)
 
           await newInteraction.followUp({ embeds: [newMedia.mediaEmbed], components: [], ephemeral: false })

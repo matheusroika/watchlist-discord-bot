@@ -73,11 +73,24 @@ export interface WatchlistMedia {
   addedAt: number;
 }
 
+export interface WatchedMedia extends WatchlistMedia {
+  watchedBy: {
+    id: string;
+    username: string;
+    bot: boolean;
+    createdTimestamp: number;
+    tag: string;
+    displayAvatarURL: string;
+  };
+  watchedAt: number;
+}
+
 export interface Server extends Document {
   channelToListen: string | null;
   serverId: string;
   language: string;
   watchlist: Array<WatchlistMedia>
+  watched: Array<WatchedMedia>
 }
 
 export interface Genre {
@@ -108,7 +121,6 @@ export interface LanguageFile {
     add: string;
     cancel: string;
     confirm: string;
-    formatOfDate: string;
     movie: string;
     tv: string;
     previousMedia: string;
@@ -229,6 +241,20 @@ export interface LanguageFile {
       cancelled: string;
     },
     remove: {
+      name: string;
+      description: string;
+      longDescription: string;
+      optionName: string;
+      optionDescription: string;
+      title: string;
+      emptyError: string;
+      notFound: string;
+      pagination: string;
+      success: string;
+      successEphemeral: string;
+      cancelled: string;
+    },
+    watched: {
       name: string;
       description: string;
       longDescription: string;

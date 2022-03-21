@@ -4,7 +4,6 @@
     "add": "Adicionar",
     "cancel": "Cancelar",
     "confirm": "Confirmar",
-    "formatOfDate": "dd/MM/yyyy 'às' HH:mm",
     "movie": "Filme",
     "tv": "Série",
     "previousMedia": "Obra anterior",
@@ -135,6 +134,20 @@
       "successEphemeral": "Obra removida com sucesso",
       "success": "Obra removida com sucesso por {{{0}}}",
       "cancelled": "A remoção de obras da watchlist foi encerrada. Nenhuma obra foi removida"
+    },
+    "watched": {
+      "name": "assistido",
+      "description": "Marca uma obra como assistida",
+      "longDescription": "Marca uma obra como assistida.",
+      "optionName": "titulo",
+      "optionDescription": "Titulo da obra que você deseja marcar como assistida",
+      "title": "Assistido",
+      "emptyError": "A watchlist está vazia! Digite `/{{{0}}} nome da obra` para adicionar uma obra!",
+      "notFound": "Nenhuma obra com esse nome foi encontrada na watchlist",
+      "pagination": "Resultado {{{removeIndex}}}/{{{removeListLength}}}",
+      "successEphemeral": "Obra marcada como assistida com sucesso",
+      "success": "Obra marcada como assistida com sucesso por {{{0}}}",
+      "cancelled": "Nenhuma obra foi marcada como assistida"
     }
   }
 }

@@ -4,7 +4,6 @@
     "add": "Add",
     "cancel": "Cancel",
     "confirm": "Confirm",
-    "formatOfDate": "MM/dd/yyyy 'at' hh:mm a",
     "movie": "Movie",
     "tv": "Series",
     "previousMedia": "Previous media",
@@ -135,6 +134,20 @@
       "successEphemeral": "Media was removed successfully",
       "success": "Media was removed successfully by {{{0}}}",
       "cancelled": "Watchlist media removal ended. No media was removed"
+    },
+    "watched": {
+      "name": "watched",
+      "description": "Mark media as watched",
+      "longDescription": "Mark media as watched.",
+      "optionName": "title",
+      "optionDescription": "Title of the media you wish to mark as watched",
+      "title": "Watched",
+      "emptyError": "The watchlist is empty! Type `/{{{0}}} media name` to add media!",
+      "notFound": "Media title not found in watchlist",
+      "pagination": "Result {{{removeIndex}}}/{{{removeListLength}}}",
+      "successEphemeral": "Media was marked as watched successfully",
+      "success": "Media was marked as watched successfully by {{{0}}}",
+      "cancelled": "No media was marked as watched"
     }
   }
 }

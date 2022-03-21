@@ -57,6 +57,9 @@ export = {
           true)
 
         ++addFieldCount
+        if (addFieldCount === 1) {
+          listEmbed.addField('** **', '** **', true)
+        }
         if (addFieldCount === 2 && i < finishingIndex - addFieldCount) {
           listEmbed.addField('** **', '** **')
           addFieldCount = 0
@@ -74,13 +77,7 @@ export = {
       addFields(startingIndex, finishingIndex)
 
       listEmbed
-        .addFields(
-          {name: '** **', value: '** **'},
-          {name: '◀️', value: common.previousPage, inline: true},
-          {name: '▶️', value: common.nextPage, inline: true},
-          {name: '❌', value: common.cancel, inline: true},
-          {name: '** **', value: '** **'},
-        )
+        .addField('** **', '** **')
         .setFooter({ text: Mustache.render(listCommand.pagination, {
           currentPage,
           numberOfPages
