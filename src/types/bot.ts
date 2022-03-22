@@ -174,17 +174,16 @@ export interface LanguageFile {
         value: string;
         isPerson: string;
       }
-      alreadyInWatchlist: {
-        isMovieTrue: string;
-        isMovieFalse: string;
-        value: string;
-      }
+      alreadyInWatchlist: string;
+      alreadyInWatched: string;
       knownForDescription: string;
       selectMedia: string;
       selectPerson: string;
       success: string;
       successEphemeral: string;
       cancelled: string;
+      isMovieTrue: string;
+      isMovieFalse: string;
     },
     channel: {
       name: string;

@@ -7,7 +7,7 @@ import { api } from '../services/api'
 import availableLanguages from '../utils/getAvailableLanguages'
 
 const { images }: ImagesCache = require("../../cache/imagesCache.json")
-import { Config, ImagesCache, LanguageFile, Media, TMDBSearchResult } from '../types/bot'
+import { Config, ImagesCache, LanguageFile, Media, TMDBSearchResult, WatchlistMedia } from '../types/bot'
 
 export = {
   getCommand() {
@@ -397,20 +397,46 @@ export = {
         } else if (newInteraction.customId === 'confirm') {
           const newMedia = await getMediaEmbed()
 
-          for (const items of server.watchlist) {
-            if (items.original_title === newMedia.mediaOriginalTitle) {
+          for (const item of server.watchlist) {
+            if (item.original_title === newMedia.mediaOriginalTitle) {
               newMedia.mediaEmbed.fields = []
               newMedia.mediaEmbed
                 .addFields(
                 {name: '** **', value: '** **'},
                 {name: addCommand.title, value: 
                   `${newMedia.isMovie
-                    ? addCommand.alreadyInWatchlist.isMovieTrue
-                    : addCommand.alreadyInWatchlist.isMovieFalse}`
+                    ? addCommand.isMovieTrue
+                    : addCommand.isMovieFalse}`
                   +
-                  `${Mustache.render(addCommand.alreadyInWatchlist.value, {
-                    itemsAddedBy: items.addedBy.id,
-                    formattedDate: `<t:${Math.round(items.addedAt/1000)}>`,
+                  `${Mustache.render(addCommand.alreadyInWatchlist, {
+                    itemsAddedBy: item.addedBy.id,
+                    formattedDate: `<t:${Math.round(item.addedAt/1000)}>`,
+                  })}`},
+              )
+                .setFooter({ text: '' })
+
+              await newInteraction.update({ embeds: [newMedia.mediaEmbed], components: [] })
+              collector.stop()
+              return
+            }
+          }
+
+          for (const item of server.watched) {
+            if (item.original_title === newMedia.mediaOriginalTitle) {
+              newMedia.mediaEmbed.fields = []
+              newMedia.mediaEmbed
+                .addFields(
+                {name: '** **', value: '** **'},
+                {name: addCommand.title, value: 
+                  `${newMedia.isMovie
+                    ? addCommand.isMovieTrue
+                    : addCommand.isMovieFalse}`
+                  +
+                  `${Mustache.render(addCommand.alreadyInWatched, {
+                    itemsAddedBy: item.addedBy.id,
+                    formattedDate: `<t:${Math.round(item.addedAt/1000)}>`,
+                    itemsWatchedBy: item.watchedBy.id,
+                    watchedDate: `<t:${Math.round(item.watchedAt/1000)}>`,
                   })}`},
               )
                 .setFooter({ text: '' })

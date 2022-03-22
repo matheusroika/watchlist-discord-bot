@@ -11,7 +11,7 @@ export default async function handleListenedMessage(message: Discord.Message, { 
   const { commands, listenedMessage, common }: LanguageFile = require(`../../languages/${language}.json`)
   const addCommand = commands.add
 
-  const server = await Server.findOne({ serverId: message.guildId }, "watchlist")
+  const server = await Server.findOne({ serverId: message.guildId }, "watchlist watched")
   const { watchlist } = server
   const commandMessage = message
 
@@ -73,17 +73,38 @@ export default async function handleListenedMessage(message: Discord.Message, { 
         : mediaDataInEnglish.overview
     }
 
-    for (const items of watchlist) {
-      if (items.original_title === mediaOriginalTitle) { 
-        mediaEmbed.setTitle(listenedMessage.title).setDescription(
-          `${isMovie
-              ? addCommand.alreadyInWatchlist.isMovieTrue
-              : addCommand.alreadyInWatchlist.isMovieFalse}` +
-          `${Mustache.render(addCommand.alreadyInWatchlist.value, {
-            itemsAddedBy: items.addedBy.id,
-            formattedDate: `<t:${Math.round(items.addedAt/1000)}>`,
-          })}`
-        )
+    for (const item of watchlist) {
+      if (item.original_title === mediaOriginalTitle) { 
+        mediaEmbed.setTitle(listenedMessage.title)
+          .setDescription(
+            `${isMovie
+                ? addCommand.isMovieTrue
+                : addCommand.isMovieFalse}` +
+            `${Mustache.render(addCommand.alreadyInWatchlist, {
+              itemsAddedBy: item.addedBy.id,
+              formattedDate: `<t:${Math.round(item.addedAt/1000)}>`,
+            })}`
+          )
+
+        message.channel.send({ embeds: [mediaEmbed] })
+        return
+      }
+    }
+
+    for (const item of server.watched) {
+      if (item.original_title === mediaOriginalTitle) { 
+        mediaEmbed.setTitle(listenedMessage.title)
+          .setDescription(
+            `${isMovie
+                ? addCommand.isMovieTrue
+                : addCommand.isMovieFalse}` +
+            `${Mustache.render(addCommand.alreadyInWatched, {
+              itemsAddedBy: item.addedBy.id,
+              formattedDate: `<t:${Math.round(item.addedAt/1000)}>`,
+              itemsWatchedBy: item.watchedBy.id,
+              watchedDate: `<t:${Math.round(item.watchedAt/1000)}>`
+            })}`
+          )
 
         message.channel.send({ embeds: [mediaEmbed] })
         return

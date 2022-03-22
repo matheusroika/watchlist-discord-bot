@@ -55,17 +55,16 @@
         "value": "Página {{{currentQueryPage}}}/{{{mediaDataTotalPages}}} | Resultado {{{currentMediaIndex}}}/{{{mediaDataResultsLength}}}",
         "isPerson": " | Obras famosas de {{{mediaDataName}}} {{{currentKnownForIndex}}}/{{{mediaDataLength}}}"
       },
-      "alreadyInWatchlist": {
-        "isMovieTrue": "Esse filme",
-        "isMovieFalse": "Essa série",
-        "value": " já está na watchlist do servidor.\nAdicionado por <@{{{itemsAddedBy}}}> em {{{formattedDate}}}"
-      },
+      "alreadyInWatchlist": " já está na watchlist do servidor.\nAdicionado por <@{{{itemsAddedBy}}}> em {{{formattedDate}}}",
+      "alreadyInWatched": " já está na lista de assistidos do servidor.\nAdicionado por <@{{{itemsAddedBy}}}> em {{{formattedDate}}}\nAssistido por <@{{{itemsWatchedBy}}}> em {{{watchedDate}}}",
       "knownForDescription": "Conhecido por {{{knownForDepartment}}} ({{{personMedias}}})",
       "selectMedia": "Selecionar obra",
       "selectPerson": "Selecionar pessoa",
       "success": "Obra adicionada com sucesso\nAdicionado por <@{{{itemsAddedBy}}}> em {{{formattedDate}}}",
       "successEphemeral": "Sua obra foi adicionada com sucesso na watchlist.",
-      "cancelled": "Nenhuma obra adicionada a watchlist"
+      "cancelled": "Nenhuma obra adicionada a watchlist",
+      "isMovieTrue": "Esse filme",
+      "isMovieFalse": "Essa série"
     },
     "channel": {
       "name": "canal",

@@ -55,17 +55,16 @@
         "value": "Page {{{currentQueryPage}}}/{{{mediaDataTotalPages}}} | Result {{{currentMediaIndex}}}/{{{mediaDataResultsLength}}}",
         "isPerson": " | {{{mediaDataName}}} famous works {{{currentKnownForIndex}}}/{{{mediaDataLength}}}"
       },
-      "alreadyInWatchlist": {
-        "isMovieTrue": "This movie",
-        "isMovieFalse": "This series",
-        "value": " already is in the server's watchlist.\nAdded by <@{{{itemsAddedBy}}}> at {{{formattedDate}}}"
-      },
+      "alreadyInWatchlist": " already is in the server's watchlist.\nAdded by <@{{{itemsAddedBy}}}> at {{{formattedDate}}}",
+      "alreadyInWatched": " already is in the server's watched list.\nAdded by <@{{{itemsAddedBy}}}> at {{{formattedDate}}}\nWatched by <@{{{itemsWatchedBy}}}> at {{{watchedDate}}}",
       "knownForDescription": "Known for {{{knownForDepartment}}} ({{{personMedias}}})",
       "selectMedia": "Select media",
       "selectPerson": "Select person",
       "success": "Media added with success.\nAdded by <@{{{itemsAddedBy}}}> at {{{formattedDate}}}",
       "successEphemeral": "Your media was added successfully to the watchlist",
-      "cancelled": "No media was added to the watchlist"
+      "cancelled": "No media was added to the watchlist",
+      "isMovieTrue": "This movie",
+      "isMovieFalse": "This series"
     },
     "channel": {
       "name": "channel",
