@@ -45,7 +45,9 @@ export = {
       removeEmbed
         .setTitle(removeCommand.title)
         .setDescription(Mustache.render(removeCommand.emptyError, [removeCommand.name]))
-      return interaction.reply({ embeds: [removeEmbed] })
+        
+      await interaction.reply({ embeds: [removeEmbed] })
+      return
     }
 
     function normalizeString(string: string) {

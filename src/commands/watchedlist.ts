@@ -41,7 +41,8 @@ export = {
     if(!watched.length) {
       listEmbed.fields = []
       listEmbed.setDescription(Mustache.render(listCommand.emptyError, [commands.watched.name]))
-      interaction.reply({ embeds: [listEmbed], ephemeral: true })
+
+      await interaction.reply({ embeds: [listEmbed], ephemeral: true })
       return
     }
      
@@ -132,7 +133,8 @@ export = {
         listEmbed
           .setDescription(listCommand.cancelled)
           .setFooter({ text:'' })
-        newInteraction.update({ embeds: [listEmbed], components: [] })
+          
+        await newInteraction.update({ embeds: [listEmbed], components: [] })
       }
     })
   }
