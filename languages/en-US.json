@@ -147,6 +147,16 @@
       "successEphemeral": "Media was marked as watched successfully",
       "success": "Media was marked as watched successfully by {{{0}}}",
       "cancelled": "No media was marked as watched"
+    },
+    "watchedlist": {
+      "name": "watchedlist",
+      "description": "Show all media from the watched list",
+      "longDescription": "Show all media from the watched list.",
+      "title": "Watched List",
+      "presentation": "These are the media currently in the watched list",
+      "emptyError": "The watched list is empty! Type `/{{{0}}} media title` to mark media as watched!",
+      "pagination": "Page {{{currentPage}}}/{{{numberOfPages}}}",
+      "cancelled": "Watched List visualization ended"
     }
   }
 }

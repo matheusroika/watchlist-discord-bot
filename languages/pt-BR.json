@@ -147,6 +147,16 @@
       "successEphemeral": "Obra marcada como assistida com sucesso",
       "success": "Obra marcada como assistida com sucesso por {{{0}}}",
       "cancelled": "Nenhuma obra foi marcada como assistida"
+    },
+    "list": {
+      "name": "assistidos",
+      "description": "Lista todas as obras da lista de assistidos",
+      "longDescription": "Lista todas as obras da lista de assistidos.",
+      "title": "Assistidos",
+      "presentation": "Essas são as obras atualmente na lista de assistidos",
+      "emptyError": "A lista de assistidos está vazia! Digite `/{{{0}}} nome da obra` para marcar uma obra como assistida!",
+      "pagination": "Página {{{currentPage}}}/{{{numberOfPages}}}",
+      "cancelled": "A visualização da lista de assistidos foi encerrada"
     }
   }
 }

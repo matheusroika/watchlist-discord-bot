@@ -34,8 +34,8 @@ export = {
     const { commands, common }: LanguageFile = require(`../../languages/${language}.json`)
     const removeCommand = commands.remove
 
-    const server: TypeServer = await Server.findOne({serverId: interaction.guildId}, 'watchlist')
-    const { watchlist } = server
+    const server: TypeServer = await Server.findOne({serverId: interaction.guildId}, 'watchlist watched')
+    const { watchlist, watched } = server
     const titleToRemove = normalizeString(interaction.options.getString(removeCommand.optionName) as string)
     let removeIndex = 0
     const removeList: WatchlistMedia[] = []
@@ -53,6 +53,15 @@ export = {
     }
 
     for (const media of watchlist) {
+      const normalizedTitle = normalizeString(media.title)
+      const normalizedOriginalTitle = normalizeString(media.original_title)
+
+      if (normalizedTitle.includes(titleToRemove) || normalizedOriginalTitle.includes(titleToRemove)) {
+        removeList.push(media)
+      }
+    }
+
+    for (const media of watched) {
       const normalizedTitle = normalizeString(media.title)
       const normalizedOriginalTitle = normalizeString(media.original_title)
 
@@ -155,7 +164,9 @@ export = {
           .setDescription('')
           .setFooter({ text: '' })
           .addField(removeCommand.title, removeCommand.successEphemeral)
+
         server.watchlist = watchlist.filter(media => media !== newReply.removeMedia)
+        server.watched = watched.filter(media => media !== newReply.removeMedia)
         await server.save()
 
         await newInteraction.update({ embeds: [removeEmbed], components: [] })

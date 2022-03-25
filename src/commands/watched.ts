@@ -44,7 +44,7 @@ export = {
     if(!watchlist.length) {
       removeEmbed
         .setTitle(watchedCommand.title)
-        .setDescription(Mustache.render(watchedCommand.emptyError, [watchedCommand.name]))
+        .setDescription(Mustache.render(watchedCommand.emptyError, [commands.add.name]))
       return interaction.reply({ embeds: [removeEmbed] })
     }
 
