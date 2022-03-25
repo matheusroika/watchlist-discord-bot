@@ -266,6 +266,16 @@ export interface LanguageFile {
       success: string;
       successEphemeral: string;
       cancelled: string;
+    },
+    watchedlist: {
+      name: string;
+      description: string;
+      longDescription: string;
+      title: string;
+      presentation: string;
+      emptyError: string;
+      pagination: string;
+      cancelled: string;
     }
   }
 }
