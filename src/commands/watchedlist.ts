@@ -11,7 +11,7 @@ export = {
   getCommand() {
     const command = availableLanguages.map(language => {
       const languageFile: LanguageFile = require(`../../languages/${language}.json`)
-      const commandTranslation = languageFile.commands.list
+      const commandTranslation = languageFile.commands.watchedlist
 
       return {
         [language]: {
