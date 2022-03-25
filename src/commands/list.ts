@@ -40,7 +40,7 @@ export = {
     
     if(!watchlist.length) {
       listEmbed.fields = []
-      listEmbed.setDescription(Mustache.render(listCommand.emptyError, [listCommand.name]))
+      listEmbed.setDescription(Mustache.render(listCommand.emptyError, [commands.add.name]))
       interaction.reply({ embeds: [listEmbed], ephemeral: true })
       return
     }
