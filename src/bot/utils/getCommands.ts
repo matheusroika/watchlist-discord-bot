@@ -4,7 +4,7 @@ import Discord from 'discord.js'
 
 import availableLanguages from './getAvailableLanguages'
 
-import { Command, CommandByLanguages } from '../types/bot'
+import { Command, CommandByLanguages } from '../../types/bot'
 
 const commandsByLanguage = new Discord.Collection<string, Discord.Collection<string, Command>>()
 

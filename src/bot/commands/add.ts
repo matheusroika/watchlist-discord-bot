@@ -2,17 +2,17 @@ import Discord from 'discord.js'
 import { SlashCommandBuilder } from '@discordjs/builders'
 import Mustache from 'mustache'
 
-import Server from '../models/Server'
-import { api } from '../services/api'
+import Server from '../../models/Server'
+import { api } from '../../services/api'
 import availableLanguages from '../utils/getAvailableLanguages'
 
-const { images }: ImagesCache = require("../../cache/imagesCache.json")
-import { Config, ImagesCache, LanguageFile, Media, TMDBSearchResult, WatchlistMedia } from '../types/bot'
+const { images }: ImagesCache = require("../cache/imagesCache.json")
+import { Config, ImagesCache, LanguageFile, Media, TMDBSearchResult, WatchlistMedia } from '../../types/bot'
 
 export = {
   getCommand() {
     const command = availableLanguages.map(language => {
-      const languageFile: LanguageFile = require(`../../languages/${language}.json`)
+      const languageFile: LanguageFile = require(`../languages/${language}.json`)
       const commandTranslation = languageFile.commands.add
 
       return {
@@ -54,7 +54,7 @@ export = {
     return command
   },
   async execute(interaction: Discord.CommandInteraction, { language }: Config) {
-    const { commands, common }: LanguageFile = require(`../../languages/${language}.json`)
+    const { commands, common }: LanguageFile = require(`../languages/${language}.json`)
     const addCommand = commands.add
 
     const server = await Server.findOne({serverId: interaction.guildId})

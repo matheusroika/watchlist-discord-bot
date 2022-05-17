@@ -1,10 +1,10 @@
 import Discord from 'discord.js'
 import { SlashCommandBuilder } from '@discordjs/builders';
 
-import Server from '../models/Server'
+import Server from '../../models/Server'
 
-import { Config, GenresCache, ImagesCache, LanguageFile, Server as TypeServer, WatchlistMedia } from '../types/bot'
-const { images }: ImagesCache = require("../../cache/imagesCache.json")
+import { Config, GenresCache, ImagesCache, LanguageFile, Server as TypeServer, WatchlistMedia } from '../../types/bot'
+const { images }: ImagesCache = require("../cache/imagesCache.json")
 
 import Mustache from 'mustache'
 
@@ -13,7 +13,7 @@ import availableLanguages from '../utils/getAvailableLanguages';
 export = {
   getCommand() {
     const command = availableLanguages.map(language => {
-      const languageFile: LanguageFile = require(`../../languages/${language}.json`)
+      const languageFile: LanguageFile = require(`../languages/${language}.json`)
       const commandTranslation = languageFile.commands.random
 
       return {
@@ -32,9 +32,9 @@ export = {
     return command
   },
   async execute(interaction: Discord.CommandInteraction, { language }: Config) {
-    const { commands, common }: LanguageFile = require(`../../languages/${language}.json`)
+    const { commands, common }: LanguageFile = require(`../languages/${language}.json`)
     const randomCommand = commands.random
-    const genresCache: GenresCache = require(`../../cache/genresCache_${language}`)
+    const genresCache: GenresCache = require(`../cache/genresCache_${language}`)
     
     const { watchlist }: TypeServer = await Server.findOne({serverId: interaction.guildId}, 'watchlist')
     const args = interaction.options.getString(randomCommand.optionName)

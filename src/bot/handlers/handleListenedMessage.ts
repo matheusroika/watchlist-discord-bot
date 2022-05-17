@@ -1,14 +1,14 @@
 import Discord from "discord.js"
 import Mustache from "mustache"
 
-import { api } from "../services/api"
-import Server from "../models/Server"
+import { api } from "../../services/api"
+import Server from "../../models/Server"
 
-const { images }: ImagesCache = require("../../cache/imagesCache.json")
-import { Config, ImagesCache, LanguageFile, Media } from "../types/bot"
+const { images }: ImagesCache = require("../cache/imagesCache.json")
+import { Config, ImagesCache, LanguageFile, Media } from "../../types/bot"
 
 export default async function handleListenedMessage(message: Discord.Message, { language }: Config) {
-  const { commands, listenedMessage, common }: LanguageFile = require(`../../languages/${language}.json`)
+  const { commands, listenedMessage, common }: LanguageFile = require(`../languages/${language}.json`)
   const addCommand = commands.add
 
   const server = await Server.findOne({ serverId: message.guildId }, "watchlist watched")

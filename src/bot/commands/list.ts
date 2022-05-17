@@ -2,15 +2,15 @@ import Discord from "discord.js"
 import { SlashCommandBuilder } from '@discordjs/builders'
 import Mustache from 'mustache'
 
-import Server from "../models/Server"
+import Server from "../../models/Server"
 import availableLanguages from "../utils/getAvailableLanguages"
 
-import { Config, LanguageFile } from "../types/bot"
+import { Config, LanguageFile } from "../../types/bot"
 
 export = {
   getCommand() {
     const command = availableLanguages.map(language => {
-      const languageFile: LanguageFile = require(`../../languages/${language}.json`)
+      const languageFile: LanguageFile = require(`../languages/${language}.json`)
       const commandTranslation = languageFile.commands.list
 
       return {
@@ -25,7 +25,7 @@ export = {
     return command
   },
   async execute(interaction: Discord.CommandInteraction, { language }: Config) {
-    const { commands, common }: LanguageFile = require(`../../languages/${language}.json`)
+    const { commands, common }: LanguageFile = require(`../languages/${language}.json`)
     const listCommand = commands.list
 
     const { watchlist } = await Server.findOne({serverId: interaction.guildId}, 'watchlist')

@@ -1,11 +1,11 @@
 {
   "name": "discord-watchlister",
   "version": "1.0.0",
-  "main": "src/bot.ts",
+  "main": "src/main.ts",
   "scripts": {
     "dev": "nodenv . --exec nodemon",
     "build": "tsc",
-    "start": "node ./dist/bot.js"
+    "start": "node ./dist/main.js"
   },
   "license": "MIT",
   "dependencies": {
@@ -14,11 +14,13 @@
     "date-fns": "^2.21.1",
     "discord-api-types": "^0.27.2",
     "discord.js": "^13.6.0",
+    "express": "^4.18.1",
     "mongoose": "^5.12.11",
     "mustache": "^4.2.0",
     "node-cron": "^3.0.0"
   },
   "devDependencies": {
+    "@types/express": "^4.17.13",
     "@types/mustache": "^4.1.1",
     "@types/node": "^15.0.1",
     "@types/node-cron": "^2.0.3",

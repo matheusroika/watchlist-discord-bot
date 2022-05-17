@@ -1,15 +1,15 @@
 import Discord from 'discord.js'
 
 import handleListenedMessage from './handlers/handleListenedMessage'
-import Server from './models/Server'
-import db from './services/db'
+import Server from '../models/Server'
+import db from '../services/db'
 
 const generateCaches = require('./utils/generateCaches')
 import commands from './utils/getCommands'
 import availableLanguages from './utils/getAvailableLanguages'
 import deployCommands from './utils/deployCommands'
 
-import { Config } from './types/bot'
+import { Config } from '../types/bot'
 type InteractionOrMessage = Discord.CommandInteraction | Discord.Message
 
 db.connect()

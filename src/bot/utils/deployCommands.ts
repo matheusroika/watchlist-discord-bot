@@ -1,10 +1,10 @@
 import { REST } from '@discordjs/rest';
 import { Routes } from 'discord-api-types/v9';
 
-import Server from '../models/Server'
-import commands from '../utils/getCommands'
+import Server from '../../models/Server'
+import commands from './getCommands'
 
-import { Config } from '../types/bot'
+import { Config } from '../../types/bot'
 
 const rest = new REST({ version: '9' }).setToken(process.env.BOT_TOKEN as string)
 

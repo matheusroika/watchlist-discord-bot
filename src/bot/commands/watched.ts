@@ -2,17 +2,17 @@ import Discord from 'discord.js'
 import { SlashCommandBuilder } from '@discordjs/builders'
 import Mustache from 'mustache'
 
-import Server from '../models/Server'
+import Server from '../../models/Server'
 import availableLanguages from '../utils/getAvailableLanguages'
 
-const { images }: ImagesCache = require("../../cache/imagesCache.json")
-import { Config, ImagesCache, LanguageFile, Server as TypeServer, WatchlistMedia } from '../types/bot'
+const { images }: ImagesCache = require("../cache/imagesCache.json")
+import { Config, ImagesCache, LanguageFile, Server as TypeServer, WatchedMedia, WatchlistMedia } from '../../types/bot'
 
 export = {
   getCommand() {
     const command = availableLanguages.map(language => {
-      const languageFile: LanguageFile = require(`../../languages/${language}.json`)
-      const commandTranslation = languageFile.commands.remove
+      const languageFile: LanguageFile = require(`../languages/${language}.json`)
+      const commandTranslation = languageFile.commands.watched
 
       return {
         [language]: {
@@ -23,7 +23,7 @@ export = {
               option.setName(commandTranslation.optionName)
                 .setDescription(commandTranslation.optionDescription)
                 .setRequired(true)
-            ),
+            )
         }
       }
     })
@@ -31,23 +31,23 @@ export = {
     return command
   },
   async execute(interaction: Discord.CommandInteraction, { language }: Config) {
-    const { commands, common }: LanguageFile = require(`../../languages/${language}.json`)
-    const removeCommand = commands.remove
+    const { commands, common }: LanguageFile = require(`../languages/${language}.json`)
+    const watchedCommand = commands.watched
 
     const server: TypeServer = await Server.findOne({serverId: interaction.guildId}, 'watchlist watched')
-    const { watchlist, watched } = server
-    const titleToRemove = normalizeString(interaction.options.getString(removeCommand.optionName) as string)
+    const { watchlist } = server
+    const titleToRemove = normalizeString(interaction.options.getString(watchedCommand.optionName) as string)
     let removeIndex = 0
     const removeList: WatchlistMedia[] = []
     const removeEmbed = new Discord.MessageEmbed()
 
     if(!watchlist.length) {
       removeEmbed
-        .setTitle(removeCommand.title)
-        .setDescription(Mustache.render(removeCommand.emptyError, [removeCommand.name]))
-        
+        .setTitle(watchedCommand.title)
+        .setDescription(Mustache.render(watchedCommand.emptyError, [commands.add.name]))
+
       await interaction.reply({ embeds: [removeEmbed] })
-      return
+      return 
     }
 
     function normalizeString(string: string) {
@@ -63,19 +63,10 @@ export = {
       }
     }
 
-    for (const media of watched) {
-      const normalizedTitle = normalizeString(media.title)
-      const normalizedOriginalTitle = normalizeString(media.original_title)
-
-      if (normalizedTitle.includes(titleToRemove) || normalizedOriginalTitle.includes(titleToRemove)) {
-        removeList.push(media)
-      }
-    }
-
     if (removeList.length === 0) {
       removeEmbed
-        .setTitle(removeCommand.title)
-        .setDescription(removeCommand.notFound)
+        .setTitle(watchedCommand.title)
+        .setDescription(watchedCommand.notFound)
       await interaction.reply({ embeds: [removeEmbed] })
       return
     }
@@ -103,7 +94,7 @@ export = {
           {name: '❌', value: common.cancel, inline: true},
           {name: '** **', value: '** **'},
         )
-        .setFooter({ text: Mustache.render(removeCommand.pagination, {
+        .setFooter({ text: Mustache.render(watchedCommand.pagination, {
           removeIndex: removeIndex + 1,
           removeListLength: removeList.length
         }) })
@@ -165,16 +156,39 @@ export = {
         removeEmbed
           .setDescription('')
           .setFooter({ text: '' })
-          .addField(removeCommand.title, removeCommand.successEphemeral)
+          .addField(watchedCommand.title, watchedCommand.successEphemeral)
+
+        const watchedBy = {
+          id: interaction.user.id,
+          username: interaction.user.username,
+          bot: interaction.user.bot,
+          createdTimestamp: interaction.user.createdTimestamp,
+          tag: interaction.user.tag,
+          displayAvatarURL: interaction.user.displayAvatarURL()
+        }
+
+        const mediaObject = {
+          addedBy: newReply.removeMedia.addedBy,
+          genres: newReply.removeMedia.genres,
+          id: newReply.removeMedia.id,
+          title: newReply.removeMedia.title,
+          original_title: newReply.removeMedia.original_title,
+          media_type: newReply.removeMedia.media_type,
+          description: newReply.removeMedia.description,
+          poster_path: newReply.removeMedia.poster_path,
+          addedAt: newReply.removeMedia.addedAt,
+          watchedBy,
+          watchedAt: Date.now()
+        }
 
         server.watchlist = watchlist.filter(media => media !== newReply.removeMedia)
-        server.watched = watched.filter(media => media !== newReply.removeMedia)
+        server.watched.push(mediaObject)
         await server.save()
 
         await newInteraction.update({ embeds: [removeEmbed], components: [] })
 
         removeEmbed.fields = []
-        removeEmbed.addField(removeCommand.title, Mustache.render(removeCommand.success, [newInteraction.user.toString()]))
+        removeEmbed.addField(watchedCommand.title, Mustache.render(watchedCommand.success, [newInteraction.user.toString()]))
 
         await newInteraction.followUp({ embeds: [removeEmbed], ephemeral: false })
         collector.stop()
@@ -182,8 +196,8 @@ export = {
       } else if (newInteraction.customId === 'cancel') {
         removeEmbed.fields = []
         removeEmbed
-          .setTitle(removeCommand.title)
-          .setDescription(removeCommand.cancelled)
+          .setTitle(watchedCommand.title)
+          .setDescription(watchedCommand.cancelled)
           .setURL('')
           .setThumbnail('')
           .setFooter({ text: '' })
@@ -192,6 +206,6 @@ export = {
         collector.stop()
         return
       }
-    })  
+    })
   }
 }

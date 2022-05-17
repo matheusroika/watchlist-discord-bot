@@ -7,13 +7,13 @@ import Mustache from 'mustache'
 import commands from '../utils/getCommands'
 import availableLanguages from '../utils/getAvailableLanguages'
 
-import { Command, Config, LanguageFile } from '../types/bot'
+import { Command, Config, LanguageFile } from '../../types/bot'
 type CommandFile = 'add' | 'channel' | 'help' | 'language' | 'list' | 'random' | 'remove'
 
 export = {
   getCommand() {
     const command = availableLanguages.map(language => {
-      const languageFile: LanguageFile = require(`../../languages/${language}.json`)
+      const languageFile: LanguageFile = require(`../languages/${language}.json`)
       const commandTranslation = languageFile.commands.help
 
       return {
@@ -28,7 +28,7 @@ export = {
     return command
   },
   async execute(interaction: Discord.CommandInteraction, { language }: Config) {
-    const { commands: languageCommands }: LanguageFile = require(`../../languages/${language}.json`)
+    const { commands: languageCommands }: LanguageFile = require(`../languages/${language}.json`)
     const helpCommand = languageCommands.help
 
     const helpEmbed = new Discord.MessageEmbed()

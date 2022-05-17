@@ -2,16 +2,16 @@ import Discord from 'discord.js'
 import { SlashCommandBuilder } from '@discordjs/builders'
 import Mustache from 'mustache'
 
-import Server from '../models/Server'
-import { setNewConfig } from '../bot'
+import Server from '../../models/Server'
+import { setNewConfig } from '../index'
 import availableLanguages from '../utils/getAvailableLanguages'
 
-import { LanguageFile } from '../types/bot'
+import { LanguageFile } from '../../types/bot'
 
 export = {
   getCommand() {
     const command = availableLanguages.map(language => {
-      const languageFile: LanguageFile = require(`../../languages/${language}.json`)
+      const languageFile: LanguageFile = require(`../languages/${language}.json`)
       const commandTranslation = languageFile.commands.language
 
       return {
@@ -25,7 +25,7 @@ export = {
                 .setRequired(true)
 
               availableLanguages.filter(item => item !== language).forEach(item => {
-                const itemFile: LanguageFile = require(`../../languages/${item}.json`)
+                const itemFile: LanguageFile = require(`../languages/${item}.json`)
                 option.addChoice(`${itemFile.languageName} (${item})`, item)
               })
 
@@ -39,7 +39,7 @@ export = {
   },
   async execute(interaction: Discord.CommandInteraction) {
     const config = await Server.findOne({serverId: interaction.guildId}, 'language')
-    const { commands }: LanguageFile = require(`../../languages/${config.language}.json`)
+    const { commands }: LanguageFile = require(`../languages/${config.language}.json`)
     const languageCommand = commands.language
 
     const language = interaction.options.getString(languageCommand.optionName) as string
@@ -47,7 +47,7 @@ export = {
 
     await config.save()
     setNewConfig('language', config.language, interaction)
-    const languageImport = require(`../../languages/${config.language}.json`)
+    const languageImport = require(`../languages/${config.language}.json`)
     await interaction.reply(Mustache.render(languageImport.commands.language.success, [language]))
   }
 }

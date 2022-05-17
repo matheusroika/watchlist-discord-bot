@@ -2,16 +2,16 @@ import Discord from 'discord.js'
 import { SlashCommandBuilder } from '@discordjs/builders'
 import Mustache from 'mustache'
 
-import Server from '../models/Server'
-import { setNewConfig } from '../bot'
+import Server from '../../models/Server'
+import { setNewConfig } from '../index'
 import availableLanguages from '../utils/getAvailableLanguages'
 
-import { LanguageFile } from '../types/bot'
+import { LanguageFile } from '../../types/bot'
 
 export = {
   getCommand() {
     const command = availableLanguages.map(language => {
-      const languageFile: LanguageFile = require(`../../languages/${language}.json`)
+      const languageFile: LanguageFile = require(`../languages/${language}.json`)
       const commandTranslation = languageFile.commands.channel
 
       return {
@@ -36,7 +36,7 @@ export = {
   },
   async execute(interaction: Discord.CommandInteraction) {
     const config = await Server.findOne({serverId: interaction.guildId}, 'channelToListen language')
-    const { commands }: LanguageFile = require(`../../languages/${config.language}.json`)
+    const { commands }: LanguageFile = require(`../languages/${config.language}.json`)
     const channelCommand = commands.channel
 
     const remove = interaction.options.getString(channelCommand.removeOptionName)
