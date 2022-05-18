@@ -1,18 +1,24 @@
 import express from 'express'
+import bodyParser from 'body-parser'
+import helmet from 'helmet'
 
-import Server from '../models/Server'
+import serverRouter from './routes/serverRoutes'
+import errorMiddleware from './middlewares/errorMiddleware'
 
-const port = process.env.PORT || 3333
 const app = express()
+const port = process.env.PORT || 3333
 
-app.get("/server", async (req, res) => {
-  try {
-    const servers = await Server.find()
+app.use(helmet())
+app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({ extended: true }))
+app.use(errorMiddleware.errorHandler)
 
-    res.status(200).json(servers)    
-  } catch (error) {
-    res.status(500).json({ error })
-  }
+app.get('/', (req, res) => {
+  res.json({ message: 'Welcome to the Watchlister API' })
 })
 
-app.listen(port)
+app.use('/api/server', serverRouter)
+
+app.listen(port, () => {
+  console.log(`API running on port ${port}`)
+})
