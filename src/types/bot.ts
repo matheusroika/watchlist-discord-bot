@@ -8,7 +8,6 @@ export interface Config {
   language: string;
 }
 
-
 export interface Command {
   data: SlashCommandBuilder;
   execute: (
